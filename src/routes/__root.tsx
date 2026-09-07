@@ -7,6 +7,7 @@ import {
 } from '@tanstack/react-router'
 
 import appStyles from '@/styles/app.css?url'
+import { StatePanel } from '@/shared/ui'
 
 export const Route = createRootRoute({
   head: () => ({
@@ -23,8 +24,22 @@ export const Route = createRootRoute({
     ],
     links: [{ rel: 'stylesheet', href: appStyles }],
   }),
+  notFoundComponent: NotFoundPage,
   component: RootComponent,
 })
+
+function NotFoundPage() {
+  return (
+    <main className="grid min-h-screen place-items-center p-6">
+      <StatePanel
+        kind="empty"
+        title="Intelligence view unavailable"
+        description="This route has not been added to the current product scope."
+        className="w-full max-w-xl"
+      />
+    </main>
+  )
+}
 
 function RootComponent() {
   return (
