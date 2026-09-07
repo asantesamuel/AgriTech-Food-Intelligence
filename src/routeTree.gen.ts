@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
+import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppDecisionsRouteImport } from './routes/_app/decisions'
 import { Route as AppIntelligenceRouteImport } from './routes/_app/intelligence'
@@ -18,6 +19,11 @@ import { Route as AppWorkspaceRouteImport } from './routes/_app/workspace'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignInRoute = SignInRouteImport.update({
+  id: '/sign-in',
+  path: '/sign-in',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppIndexRoute = AppIndexRouteImport.update({
@@ -48,12 +54,14 @@ const AppWorkspaceRoute = AppWorkspaceRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
+  '/sign-in': typeof SignInRoute
   '/decisions': typeof AppDecisionsRoute
   '/intelligence': typeof AppIntelligenceRoute
   '/planning': typeof AppPlanningRoute
   '/workspace': typeof AppWorkspaceRoute
 }
 export interface FileRoutesByTo {
+  '/sign-in': typeof SignInRoute
   '/decisions': typeof AppDecisionsRoute
   '/intelligence': typeof AppIntelligenceRoute
   '/planning': typeof AppPlanningRoute
@@ -63,6 +71,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
+  '/sign-in': typeof SignInRoute
   '/_app/decisions': typeof AppDecisionsRoute
   '/_app/intelligence': typeof AppIntelligenceRoute
   '/_app/planning': typeof AppPlanningRoute
@@ -71,12 +80,25 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/decisions' | '/intelligence' | '/planning' | '/workspace'
+  fullPaths:
+    | '/'
+    | '/sign-in'
+    | '/decisions'
+    | '/intelligence'
+    | '/planning'
+    | '/workspace'
   fileRoutesByTo: FileRoutesByTo
-  to: '/decisions' | '/intelligence' | '/planning' | '/workspace' | '/'
+  to:
+    | '/sign-in'
+    | '/decisions'
+    | '/intelligence'
+    | '/planning'
+    | '/workspace'
+    | '/'
   id:
     | '__root__'
     | '/_app'
+    | '/sign-in'
     | '/_app/decisions'
     | '/_app/intelligence'
     | '/_app/planning'
@@ -86,6 +108,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
+  SignInRoute: typeof SignInRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -95,6 +118,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sign-in': {
+      id: '/sign-in'
+      path: '/sign-in'
+      fullPath: '/sign-in'
+      preLoaderRoute: typeof SignInRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/': {
@@ -155,6 +185,7 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
+  SignInRoute: SignInRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

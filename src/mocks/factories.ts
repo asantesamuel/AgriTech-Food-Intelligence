@@ -31,8 +31,11 @@ export function createCatalog(seed = 42): CatalogSnapshot {
 
 export function createPlatform(seed = 42): PlatformSnapshot {
   const suffix = Math.floor(seeded(seed)() * 900 + 100)
+  const primaryOrganization = { id: 'org-akwaaba-foods', name: 'Akwaaba Foods Group', slug: 'akwaaba-foods', industry: 'Food processing and distribution', regionIds: ['region-greater-accra', 'region-ashanti'], status: 'active', createdAt: NOW } as const
+  const publicOrganization = { id: 'org-food-security', name: 'Ghana Food Security Unit', slug: 'ghana-food-security', industry: 'Public food-system planning', regionIds: ['region-greater-accra', 'region-ashanti', 'region-northern'], status: 'trial', createdAt: NOW } as const
   return platformSnapshotSchema.parse({
-    organization: { id: 'org-akwaaba-foods', name: 'Akwaaba Foods Group', slug: 'akwaaba-foods', industry: 'Food processing and distribution', regionIds: ['region-greater-accra', 'region-ashanti'], status: 'active', createdAt: NOW },
+    organization: primaryOrganization,
+    organizations: [primaryOrganization, publicOrganization],
     roles: [
       { id: 'role-admin', name: 'Organization administrator', description: 'Manages workspace access and configuration.', persona: 'organization-admin', permissions: [{ id: 'permission-manage-workspace', label: 'Manage workspace', resource: 'workspace', actions: ['view', 'manage'] }] },
       { id: 'role-analyst', name: 'Market intelligence analyst', description: 'Reviews market signals and recommendations.', persona: 'retail-analyst', permissions: [{ id: 'permission-view-intelligence', label: 'View intelligence', resource: 'intelligence', actions: ['view'] }] },
@@ -40,6 +43,7 @@ export function createPlatform(seed = 42): PlatformSnapshot {
     users: [
       { id: 'user-ama-mensah', organizationId: 'org-akwaaba-foods', name: 'Ama Mensah', email: 'ama@example.test', title: 'Head of Market Intelligence', status: 'active', roleIds: ['role-admin'], lastActiveAt: NOW },
       { id: `user-kwame-${suffix}`, organizationId: 'org-akwaaba-foods', name: 'Kwame Owusu', email: 'kwame@example.test', title: 'Procurement Manager', status: 'active', roleIds: ['role-analyst'], lastActiveAt: '2026-09-07T09:45:00+00:00' },
+      { id: 'user-abena-asare', organizationId: 'org-food-security', name: 'Abena Asare', email: 'abena@example.test', title: 'Food Security Analyst', status: 'active', roleIds: ['role-analyst'], lastActiveAt: NOW },
     ],
     invitations: [{ id: 'invite-efua', organizationId: 'org-akwaaba-foods', email: 'efua@example.test', roleId: 'role-analyst', status: 'pending', invitedAt: '2026-09-06T10:15:00+00:00' }],
   })

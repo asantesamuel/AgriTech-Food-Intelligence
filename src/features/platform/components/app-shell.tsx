@@ -4,6 +4,7 @@ import { useState } from 'react'
 
 import { cn } from '@/shared/lib/cn'
 import { Badge, Button } from '@/shared/ui'
+import { AccountSwitcher } from './account-switcher'
 import { getBreadcrumbs, primaryNavigation, type NavigationItem } from '../navigation'
 
 export function AppShell() {
@@ -43,6 +44,7 @@ export function AppShell() {
           <div className="ml-auto flex items-center gap-1.5">
             <Button variant="ghost" size="icon" aria-label="Alerts"><Bell /><span className="sr-only">Alerts</span></Button>
             <Button variant="outline" size="sm" className="hidden sm:inline-flex"><Bot />AI copilot <Badge className="ml-1 px-1.5 py-0 text-[0.55rem]">Soon</Badge></Button>
+            <AccountSwitcher />
           </div>
         </header>
         <main className="min-h-[calc(100vh-4rem)] pb-20 md:pb-0"><Outlet /></main>
