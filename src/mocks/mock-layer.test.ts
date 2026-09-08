@@ -30,4 +30,10 @@ describe('mock data and service boundary', () => {
   it('surfaces configured service failures', async () => {
     await expect(dashboardService.getSnapshot({}, { scenario: 'error', latencyMs: 0 })).rejects.toBeInstanceOf(ApiError)
   })
+
+  it('applies onboarding-aligned commodity and region filters', async () => {
+    const snapshot = await dashboardService.getSnapshot({ commodityId: 'commodity-tomato', regionId: 'region-greater-accra' }, { latencyMs: 0 })
+    expect(snapshot.risks.every((risk) => risk.commodityId === 'commodity-tomato' && risk.regionId === 'region-greater-accra')).toBe(true)
+    expect(snapshot.prices.every((price) => price.commodityId === 'commodity-tomato')).toBe(true)
+  })
 })

@@ -14,6 +14,7 @@ import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppDecisionsRouteImport } from './routes/_app/decisions'
 import { Route as AppIntelligenceRouteImport } from './routes/_app/intelligence'
+import { Route as AppOnboardingRouteImport } from './routes/_app/onboarding'
 import { Route as AppPlanningRouteImport } from './routes/_app/planning'
 import { Route as AppWorkspaceRouteImport } from './routes/_app/workspace'
 
@@ -41,6 +42,11 @@ const AppIntelligenceRoute = AppIntelligenceRouteImport.update({
   path: '/intelligence',
   getParentRoute: () => AppRoute,
 } as any)
+const AppOnboardingRoute = AppOnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppPlanningRoute = AppPlanningRouteImport.update({
   id: '/planning',
   path: '/planning',
@@ -57,6 +63,7 @@ export interface FileRoutesByFullPath {
   '/sign-in': typeof SignInRoute
   '/decisions': typeof AppDecisionsRoute
   '/intelligence': typeof AppIntelligenceRoute
+  '/onboarding': typeof AppOnboardingRoute
   '/planning': typeof AppPlanningRoute
   '/workspace': typeof AppWorkspaceRoute
 }
@@ -64,6 +71,7 @@ export interface FileRoutesByTo {
   '/sign-in': typeof SignInRoute
   '/decisions': typeof AppDecisionsRoute
   '/intelligence': typeof AppIntelligenceRoute
+  '/onboarding': typeof AppOnboardingRoute
   '/planning': typeof AppPlanningRoute
   '/workspace': typeof AppWorkspaceRoute
   '/': typeof AppIndexRoute
@@ -74,6 +82,7 @@ export interface FileRoutesById {
   '/sign-in': typeof SignInRoute
   '/_app/decisions': typeof AppDecisionsRoute
   '/_app/intelligence': typeof AppIntelligenceRoute
+  '/_app/onboarding': typeof AppOnboardingRoute
   '/_app/planning': typeof AppPlanningRoute
   '/_app/workspace': typeof AppWorkspaceRoute
   '/_app/': typeof AppIndexRoute
@@ -85,6 +94,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/decisions'
     | '/intelligence'
+    | '/onboarding'
     | '/planning'
     | '/workspace'
   fileRoutesByTo: FileRoutesByTo
@@ -92,6 +102,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/decisions'
     | '/intelligence'
+    | '/onboarding'
     | '/planning'
     | '/workspace'
     | '/'
@@ -101,6 +112,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/_app/decisions'
     | '/_app/intelligence'
+    | '/_app/onboarding'
     | '/_app/planning'
     | '/_app/workspace'
     | '/_app/'
@@ -148,6 +160,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIntelligenceRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/onboarding': {
+      id: '/_app/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof AppOnboardingRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/planning': {
       id: '/_app/planning'
       path: '/planning'
@@ -168,6 +187,7 @@ declare module '@tanstack/react-router' {
 interface AppRouteChildren {
   AppDecisionsRoute: typeof AppDecisionsRoute
   AppIntelligenceRoute: typeof AppIntelligenceRoute
+  AppOnboardingRoute: typeof AppOnboardingRoute
   AppPlanningRoute: typeof AppPlanningRoute
   AppWorkspaceRoute: typeof AppWorkspaceRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -176,6 +196,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppDecisionsRoute: AppDecisionsRoute,
   AppIntelligenceRoute: AppIntelligenceRoute,
+  AppOnboardingRoute: AppOnboardingRoute,
   AppPlanningRoute: AppPlanningRoute,
   AppWorkspaceRoute: AppWorkspaceRoute,
   AppIndexRoute: AppIndexRoute,

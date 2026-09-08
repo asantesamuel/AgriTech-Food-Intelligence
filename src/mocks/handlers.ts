@@ -25,6 +25,19 @@ export const handlers = [
     const url = new URL(request.url)
     const scenario = await prepare(url)
     if (scenario === 'error') return HttpResponse.json({ message: 'Mock intelligence unavailable' }, { status: 503 })
-    return HttpResponse.json(createDashboard(scenario))
+    const snapshot = createDashboard(scenario)
+    const commodityId = url.searchParams.get('commodityId')
+    const regionId = url.searchParams.get('regionId')
+    if (commodityId) {
+      snapshot.prices = snapshot.prices.filter((item) => item.commodityId === commodityId)
+      snapshot.forecasts = snapshot.forecasts.filter((item) => item.commodityId === commodityId)
+      snapshot.risks = snapshot.risks.filter((item) => item.commodityId === commodityId)
+      snapshot.alerts = snapshot.alerts.filter((item) => !item.commodityId || item.commodityId === commodityId)
+    }
+    if (regionId) {
+      snapshot.risks = snapshot.risks.filter((item) => item.regionId === regionId)
+      snapshot.alerts = snapshot.alerts.filter((item) => !item.regionId || item.regionId === regionId)
+    }
+    return HttpResponse.json(snapshot)
   }),
 ]

@@ -1,6 +1,7 @@
 export * from './intelligence'
 export * from './markets'
 export * from './operations'
+export * from './onboarding'
 export * from './platform'
 export * from './primitives'
 export * from './snapshots'

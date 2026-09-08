@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { useAuth } from '@/features/platform/auth/auth-context'
 import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, StatePanel } from '@/shared/ui'
 
-const protectedPathSchema = z.enum(['/', '/intelligence', '/decisions', '/planning', '/workspace'])
+const protectedPathSchema = z.enum(['/', '/intelligence', '/decisions', '/planning', '/workspace', '/onboarding'])
 
 export const Route = createFileRoute('/sign-in')({
   validateSearch: (search) => ({ redirect: protectedPathSchema.catch('/').parse(search.redirect) }),
