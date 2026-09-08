@@ -1,10 +1,11 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
 import { createDashboard, createPlatform } from '@/mocks/factories'
+import { resetMockPlatformState } from '@/mocks/handlers'
 import { mockServer } from '@/mocks/server'
 import { ApiError, dashboardService, platformService } from '@/services'
 
 beforeAll(() => mockServer.listen({ onUnhandledRequest: 'error' }))
-afterEach(() => mockServer.resetHandlers())
+afterEach(() => { mockServer.resetHandlers(); resetMockPlatformState() })
 afterAll(() => mockServer.close())
 
 describe('mock data and service boundary', () => {
@@ -40,5 +41,16 @@ describe('mock data and service boundary', () => {
   it('applies the selected forecast horizon', async () => {
     const snapshot = await dashboardService.getSnapshot({ horizon: '90d' }, { latencyMs: 0 })
     expect(snapshot.forecasts.every((forecast) => forecast.horizonDays === 90)).toBe(true)
+  })
+
+  it('supports mock organization administration mutations', async () => {
+    const initial = await platformService.getPlatform({ latencyMs: 0 })
+    const member = initial.users.find((user) => user.name === 'Kwame Owusu')!
+    const invitation = await platformService.inviteMember({ organizationId: initial.organization.id, email: 'new.member@example.test', roleId: 'role-analyst' }, { latencyMs: 0 })
+    expect(invitation.status).toBe('pending')
+    expect((await platformService.updateMember(member.id, { status: 'inactive' }, { latencyMs: 0 })).status).toBe('inactive')
+    expect((await platformService.updateOrganization(initial.organization.id, { name: 'Akwaaba Intelligence Foods', industry: initial.organization.industry, regionIds: initial.organization.regionIds }, { latencyMs: 0 })).name).toBe('Akwaaba Intelligence Foods')
+    await platformService.removeMember(member.id, { latencyMs: 0 })
+    expect((await platformService.getPlatform({ latencyMs: 0 })).users.some((user) => user.id === member.id)).toBe(false)
   })
 })

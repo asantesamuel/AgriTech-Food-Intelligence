@@ -81,7 +81,7 @@
 
 @layer base {
   * { @apply border-border outline-ring/50; }
-  html { @apply bg-background text-foreground antialiased; }
+  html { @apply bg-background text-foreground antialiased; overflow-x: hidden; }
   body { @apply min-h-screen min-w-80 bg-background font-sans text-foreground; margin: 0; }
   button, input, select, textarea { font: inherit; }
 }

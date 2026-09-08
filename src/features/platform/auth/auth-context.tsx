@@ -27,7 +27,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
 
   useEffect(() => {
     let active = true
-    setStatus('loading')
+    setStatus((current) => current === 'error' ? 'loading' : current)
     platformService.getPlatform().then((data) => {
       if (!active) return
       setPlatform(data)

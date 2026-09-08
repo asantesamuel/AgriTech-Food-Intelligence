@@ -13,7 +13,7 @@ export function AppShell() {
   const breadcrumbs = getBreadcrumbs(pathname)
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen overflow-x-hidden bg-background">
       <aside className="fixed inset-y-0 left-0 z-40 hidden border-r bg-card/95 backdrop-blur md:flex md:w-20 md:flex-col xl:w-64">
         <Brand />
         <nav className="grid gap-1 px-3 py-5" aria-label="Primary navigation">
@@ -34,7 +34,7 @@ export function AppShell() {
         </div>
       ) : null}
 
-      <div className="md:pl-20 xl:pl-64">
+      <div className="min-w-0 md:pl-20 xl:pl-64">
         <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b bg-background/90 px-4 backdrop-blur sm:px-6">
           <Button variant="ghost" size="icon" className="md:hidden" aria-label="Open menu" onClick={() => setMobileOpen(true)}><Menu /></Button>
           <nav className="flex min-w-0 items-center gap-1.5 text-sm" aria-label="Breadcrumb">
@@ -47,7 +47,7 @@ export function AppShell() {
             <AccountSwitcher />
           </div>
         </header>
-        <main className="min-h-[calc(100vh-4rem)] pb-20 md:pb-0"><Outlet /></main>
+        <main className="min-w-0 min-h-[calc(100vh-4rem)] pb-20 md:pb-0"><Outlet /></main>
       </div>
 
       <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t bg-card/95 px-1 py-1.5 backdrop-blur md:hidden" aria-label="Quick navigation">
