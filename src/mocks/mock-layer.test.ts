@@ -36,4 +36,9 @@ describe('mock data and service boundary', () => {
     expect(snapshot.risks.every((risk) => risk.commodityId === 'commodity-tomato' && risk.regionId === 'region-greater-accra')).toBe(true)
     expect(snapshot.prices.every((price) => price.commodityId === 'commodity-tomato')).toBe(true)
   })
+
+  it('applies the selected forecast horizon', async () => {
+    const snapshot = await dashboardService.getSnapshot({ horizon: '90d' }, { latencyMs: 0 })
+    expect(snapshot.forecasts.every((forecast) => forecast.horizonDays === 90)).toBe(true)
+  })
 })

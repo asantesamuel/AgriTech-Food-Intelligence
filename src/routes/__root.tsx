@@ -7,7 +7,7 @@ import {
 } from '@tanstack/react-router'
 
 import appStyles from '@/styles/app.css?url'
-import { AuthProvider } from '@/features/platform/auth/auth-context'
+import { AppProviders } from '@/providers/app-providers'
 import { StatePanel } from '@/shared/ui'
 
 export const Route = createRootRoute({
@@ -45,9 +45,9 @@ function NotFoundPage() {
 function RootComponent() {
   return (
     <RootDocument>
-      <AuthProvider>
+      <AppProviders>
         <Outlet />
-      </AuthProvider>
+      </AppProviders>
     </RootDocument>
   )
 }

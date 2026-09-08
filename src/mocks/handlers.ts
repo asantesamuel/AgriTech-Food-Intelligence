@@ -38,6 +38,9 @@ export const handlers = [
       snapshot.risks = snapshot.risks.filter((item) => item.regionId === regionId)
       snapshot.alerts = snapshot.alerts.filter((item) => !item.regionId || item.regionId === regionId)
     }
+    const horizon = url.searchParams.get('horizon')
+    const horizonDays = horizon === '7d' ? 7 : horizon === '90d' ? 90 : 30
+    snapshot.forecasts = snapshot.forecasts.map((forecast) => ({ ...forecast, horizonDays }))
     return HttpResponse.json(snapshot)
   }),
 ]

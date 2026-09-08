@@ -56,6 +56,7 @@ export function createDashboard(scenario: Exclude<MockScenario, 'error'> = 'succ
   const confidence = scenario === 'low-confidence' ? { score: 0.38, band: 'low' as const } : { score: 0.87, band: 'high' as const }
   const risks = [
     { id: 'risk-tomato-accra', commodityId: 'commodity-tomato', regionId: 'region-greater-accra', probability: scenario === 'critical-risk' ? 0.96 : 0.78, severity: scenario === 'critical-risk' ? 'critical' : 'high', volumeAtRisk: 126, unit: 'tonne', valueAtRisk: { amount: 684_000, currency: 'GHS' }, drivers: ['Peak arrivals', 'Limited cold storage'], confidence, forecastDate: '2026-09-14' },
+    { id: 'risk-yam-ashanti', commodityId: 'commodity-yam', regionId: 'region-ashanti', probability: 0.51, severity: 'medium', volumeAtRisk: 48, unit: 'tonne', valueAtRisk: { amount: 192_000, currency: 'GHS' }, drivers: ['Uneven market arrivals', 'Transport delays'], confidence, forecastDate: '2026-09-18' },
   ]
   const snapshot = {
     state: scenario,
@@ -69,8 +70,14 @@ export function createDashboard(scenario: Exclude<MockScenario, 'error'> = 'succ
     prices: catalog.commodities.map((commodity, index) => ({ id: `price-${commodity.id}`, commodityId: commodity.id, marketId: index % 2 ? 'market-kejetia' : 'market-agbogbloshie', price: Math.round((4 + random() * 18) * 100) / 100, priceUnit: { currency: 'GHS', per: commodity.defaultUnit }, observedAt: isStale ? STALE : NOW, changePercent: Math.round((-6 + random() * 18) * 10) / 10, sourceId: 'source-market-network', freshness: { observedAt: isStale ? STALE : NOW, receivedAt: NOW, status: isStale ? 'stale' : 'fresh' } })),
     forecasts: [{ id: 'forecast-maize-accra', commodityId: 'commodity-maize', marketId: 'market-agbogbloshie', metric: 'price', horizonDays: 30, unitLabel: 'GHS/kg', points: [{ date: '2026-09-14', value: 8.4, lowerBound: 7.6, upperBound: 9.2 }, { date: '2026-09-21', value: 8.9, lowerBound: 7.9, upperBound: 9.8 }], confidence, freshness: { observedAt: NOW, receivedAt: NOW, status: 'fresh' }, modelId: 'model-price-v1' }],
     risks,
-    alerts: [{ id: 'alert-tomato-glut', organizationId: 'org-akwaaba-foods', title: 'Tomato glut risk increasing', message: 'Expected arrivals exceed near-term demand in Greater Accra.', category: 'glut', severity: scenario === 'critical-risk' ? 'critical' : 'high', status: 'new', commodityId: 'commodity-tomato', regionId: 'region-greater-accra', createdAt: NOW }],
-    recommendations: [{ id: 'recommendation-tomato-route', organizationId: 'org-akwaaba-foods', title: 'Redirect tomato volume to Kumasi processors', action: 'Reserve processing capacity and reroute 80 tonnes.', rationale: 'Processing demand and available capacity reduce projected spoilage.', category: 'redistribution', priority: 'high', expectedImpactPercent: 24, confidence, status: 'new', createdAt: NOW }],
+    alerts: [
+      { id: 'alert-tomato-glut', organizationId: 'org-akwaaba-foods', title: 'Tomato glut risk increasing', message: 'Expected arrivals exceed near-term demand in Greater Accra.', category: 'glut', severity: scenario === 'critical-risk' ? 'critical' : 'high', status: 'new', commodityId: 'commodity-tomato', regionId: 'region-greater-accra', createdAt: NOW },
+      { id: 'alert-maize-shortage', organizationId: 'org-akwaaba-foods', title: 'Maize availability tightening', message: 'Northern inflows are below the four-week seasonal baseline.', category: 'shortage', severity: 'medium', status: 'new', commodityId: 'commodity-maize', regionId: 'region-northern', createdAt: NOW },
+    ],
+    recommendations: [
+      { id: 'recommendation-tomato-route', organizationId: 'org-akwaaba-foods', title: 'Redirect tomato volume to Kumasi processors', action: 'Reserve processing capacity and reroute 80 tonnes.', rationale: 'Processing demand and available capacity reduce projected spoilage.', category: 'redistribution', priority: 'high', expectedImpactPercent: 24, confidence, status: 'new', createdAt: NOW },
+      { id: 'recommendation-maize-contract', organizationId: 'org-akwaaba-foods', title: 'Secure near-term maize supply', action: 'Open a 30-day purchase window with Northern aggregators.', rationale: 'Early contracting reduces exposure to the forecast supply gap.', category: 'procurement', priority: 'medium', expectedImpactPercent: 11, confidence, status: 'new', createdAt: NOW },
+    ],
     unavailableSections: scenario === 'partial' ? ['supply-demand'] : [],
   }
   if (scenario === 'empty') Object.assign(snapshot, { kpis: [], prices: [], forecasts: [], risks: [], alerts: [], recommendations: [] })
