@@ -16,3 +16,12 @@ Conventions:
 Markets and intelligence are the primary product domains. Farm, field, and sensor
 contracts in `sources.ts` remain supporting upstream evidence entities and must not
 drive top-level navigation or product-module ownership.
+
+## Decision contract
+
+The MVP purchase-timing decision supports every approved state: recommended,
+accepted, dismissed, modified, assigned, approved, in progress, and completed.
+Transitions retain actor and timestamp history. Completion requires the actual
+financial value protected and its measurement time; the expected value is required
+from the initial decision. Model confidence is external-facing, while freshness and
+coverage remain distinct evidence dimensions inside the intelligence experience.

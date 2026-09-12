@@ -15,6 +15,6 @@ describe('dashboard model', () => {
   })
 
   it('fails closed when onboarding storage is malformed', () => {
-    expect(defaultDashboardFilters({ getItem: () => '{bad' }, 'org')).toEqual({ commodityId: '', regionId: '', horizon: '30d' })
+    expect(defaultDashboardFilters({ getItem: () => '{bad' }, 'org')).toEqual({ commodityId: 'commodity-tomato', regionId: 'region-greater-accra', horizon: '30d' })
   })
 })

@@ -2,7 +2,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
 import { createDashboard, createPlatform } from '@/mocks/factories'
 import { resetMockPlatformState } from '@/mocks/handlers'
 import { mockServer } from '@/mocks/server'
-import { ApiError, dashboardService, platformService } from '@/services'
+import { ApiError, dashboardService, decisionService, intelligenceService, platformService } from '@/services'
 
 beforeAll(() => mockServer.listen({ onUnhandledRequest: 'error' }))
 afterEach(() => { mockServer.resetHandlers(); resetMockPlatformState() })
@@ -52,5 +52,29 @@ describe('mock data and service boundary', () => {
     expect((await platformService.updateOrganization(initial.organization.id, { name: 'Akwaaba Intelligence Foods', industry: initial.organization.industry, regionIds: initial.organization.regionIds }, { latencyMs: 0 })).name).toBe('Akwaaba Intelligence Foods')
     await platformService.removeMember(member.id, { latencyMs: 0 })
     expect((await platformService.getPlatform({ latencyMs: 0 })).users.some((user) => user.id === member.id)).toBe(false)
+  })
+
+  it('serves linked tomato intelligence through replaceable service contracts', async () => {
+    const pulse = await intelligenceService.getMarketPulse({ latencyMs: 0 })
+    const tomato = await intelligenceService.getCommodityIntelligence('commodity-tomato', { latencyMs: 0 })
+    expect(pulse.signals[0]?.decisionId).toBe('decision-tomato-purchase')
+    expect(tomato.commodity.id).toBe('commodity-tomato')
+    expect(tomato.forecast?.confidence.band).toBe('high')
+  })
+
+  it('enforces and records the complete decision lifecycle', async () => {
+    const decisionId = 'decision-tomato-purchase'
+    const base = { actorId: 'user-kwame-owusu', organizationId: 'org-akwaaba-foods' }
+    await decisionService.transition(decisionId, { ...base, status: 'accepted', notes: 'Purchase timing accepted.' }, { latencyMs: 0 })
+    await decisionService.transition(decisionId, { ...base, status: 'approved', notes: 'Procurement approval recorded.' }, { latencyMs: 0 })
+    await decisionService.transition(decisionId, { ...base, status: 'in-progress', notes: 'Supplier engagement started.' }, { latencyMs: 0 })
+    const completed = await decisionService.transition(decisionId, { ...base, status: 'completed', notes: 'Purchase completed and outcome measured.', actualFinancialValueProtected: { amount: 641000, currency: 'GHS' } }, { latencyMs: 0 })
+    expect(completed.status).toBe('completed')
+    expect(completed.impact.actualFinancialValueProtected?.amount).toBe(641000)
+    expect(completed.history.map((entry) => entry.status)).toEqual(['recommended', 'accepted', 'approved', 'in-progress', 'completed'])
+  })
+
+  it('rejects invalid decision state transitions', async () => {
+    await expect(decisionService.transition('decision-tomato-purchase', { actorId: 'user-kwame-owusu', organizationId: 'org-akwaaba-foods', status: 'completed', actualFinancialValueProtected: { amount: 100, currency: 'GHS' } }, { latencyMs: 0 })).rejects.toMatchObject({ status: 409 })
   })
 })

@@ -17,6 +17,17 @@ import { Route as AppIntelligenceRouteImport } from './routes/_app/intelligence'
 import { Route as AppOnboardingRouteImport } from './routes/_app/onboarding'
 import { Route as AppPlanningRouteImport } from './routes/_app/planning'
 import { Route as AppWorkspaceRouteImport } from './routes/_app/workspace'
+import { Route as AppDecisionsIndexRouteImport } from './routes/_app/decisions.index'
+import { Route as AppDecisionsDecisionIdRouteImport } from './routes/_app/decisions.$decisionId'
+import { Route as AppIntelligenceIndexRouteImport } from './routes/_app/intelligence.index'
+import { Route as AppWorkspaceIndexRouteImport } from './routes/_app/workspace.index'
+import { Route as AppWorkspaceAlertsRouteImport } from './routes/_app/workspace.alerts'
+import { Route as AppWorkspaceDataSourcesRouteImport } from './routes/_app/workspace.data-sources'
+import { Route as AppWorkspaceIntegrationsRouteImport } from './routes/_app/workspace.integrations'
+import { Route as AppWorkspaceOrganizationRouteImport } from './routes/_app/workspace.organization'
+import { Route as AppWorkspacePeopleRouteImport } from './routes/_app/workspace.people'
+import { Route as AppWorkspaceSettingsRouteImport } from './routes/_app/workspace.settings'
+import { Route as AppIntelligenceCommoditiesCommodityIdRouteImport } from './routes/_app/intelligence.commodities.$commodityId'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
@@ -57,35 +68,123 @@ const AppWorkspaceRoute = AppWorkspaceRouteImport.update({
   path: '/workspace',
   getParentRoute: () => AppRoute,
 } as any)
+const AppDecisionsIndexRoute = AppDecisionsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppDecisionsRoute,
+} as any)
+const AppDecisionsDecisionIdRoute = AppDecisionsDecisionIdRouteImport.update({
+  id: '/$decisionId',
+  path: '/$decisionId',
+  getParentRoute: () => AppDecisionsRoute,
+} as any)
+const AppIntelligenceIndexRoute = AppIntelligenceIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppIntelligenceRoute,
+} as any)
+const AppWorkspaceIndexRoute = AppWorkspaceIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppWorkspaceRoute,
+} as any)
+const AppWorkspaceAlertsRoute = AppWorkspaceAlertsRouteImport.update({
+  id: '/alerts',
+  path: '/alerts',
+  getParentRoute: () => AppWorkspaceRoute,
+} as any)
+const AppWorkspaceDataSourcesRoute = AppWorkspaceDataSourcesRouteImport.update({
+  id: '/data-sources',
+  path: '/data-sources',
+  getParentRoute: () => AppWorkspaceRoute,
+} as any)
+const AppWorkspaceIntegrationsRoute =
+  AppWorkspaceIntegrationsRouteImport.update({
+    id: '/integrations',
+    path: '/integrations',
+    getParentRoute: () => AppWorkspaceRoute,
+  } as any)
+const AppWorkspaceOrganizationRoute =
+  AppWorkspaceOrganizationRouteImport.update({
+    id: '/organization',
+    path: '/organization',
+    getParentRoute: () => AppWorkspaceRoute,
+  } as any)
+const AppWorkspacePeopleRoute = AppWorkspacePeopleRouteImport.update({
+  id: '/people',
+  path: '/people',
+  getParentRoute: () => AppWorkspaceRoute,
+} as any)
+const AppWorkspaceSettingsRoute = AppWorkspaceSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AppWorkspaceRoute,
+} as any)
+const AppIntelligenceCommoditiesCommodityIdRoute =
+  AppIntelligenceCommoditiesCommodityIdRouteImport.update({
+    id: '/commodities/$commodityId',
+    path: '/commodities/$commodityId',
+    getParentRoute: () => AppIntelligenceRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/sign-in': typeof SignInRoute
-  '/decisions': typeof AppDecisionsRoute
-  '/intelligence': typeof AppIntelligenceRoute
+  '/decisions': typeof AppDecisionsRouteWithChildren
+  '/intelligence': typeof AppIntelligenceRouteWithChildren
   '/onboarding': typeof AppOnboardingRoute
   '/planning': typeof AppPlanningRoute
-  '/workspace': typeof AppWorkspaceRoute
+  '/workspace': typeof AppWorkspaceRouteWithChildren
+  '/decisions/$decisionId': typeof AppDecisionsDecisionIdRoute
+  '/workspace/alerts': typeof AppWorkspaceAlertsRoute
+  '/workspace/data-sources': typeof AppWorkspaceDataSourcesRoute
+  '/workspace/integrations': typeof AppWorkspaceIntegrationsRoute
+  '/workspace/organization': typeof AppWorkspaceOrganizationRoute
+  '/workspace/people': typeof AppWorkspacePeopleRoute
+  '/workspace/settings': typeof AppWorkspaceSettingsRoute
+  '/decisions/': typeof AppDecisionsIndexRoute
+  '/intelligence/': typeof AppIntelligenceIndexRoute
+  '/workspace/': typeof AppWorkspaceIndexRoute
+  '/intelligence/commodities/$commodityId': typeof AppIntelligenceCommoditiesCommodityIdRoute
 }
 export interface FileRoutesByTo {
   '/sign-in': typeof SignInRoute
-  '/decisions': typeof AppDecisionsRoute
-  '/intelligence': typeof AppIntelligenceRoute
   '/onboarding': typeof AppOnboardingRoute
   '/planning': typeof AppPlanningRoute
-  '/workspace': typeof AppWorkspaceRoute
   '/': typeof AppIndexRoute
+  '/decisions/$decisionId': typeof AppDecisionsDecisionIdRoute
+  '/workspace/alerts': typeof AppWorkspaceAlertsRoute
+  '/workspace/data-sources': typeof AppWorkspaceDataSourcesRoute
+  '/workspace/integrations': typeof AppWorkspaceIntegrationsRoute
+  '/workspace/organization': typeof AppWorkspaceOrganizationRoute
+  '/workspace/people': typeof AppWorkspacePeopleRoute
+  '/workspace/settings': typeof AppWorkspaceSettingsRoute
+  '/decisions': typeof AppDecisionsIndexRoute
+  '/intelligence': typeof AppIntelligenceIndexRoute
+  '/workspace': typeof AppWorkspaceIndexRoute
+  '/intelligence/commodities/$commodityId': typeof AppIntelligenceCommoditiesCommodityIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
   '/sign-in': typeof SignInRoute
-  '/_app/decisions': typeof AppDecisionsRoute
-  '/_app/intelligence': typeof AppIntelligenceRoute
+  '/_app/decisions': typeof AppDecisionsRouteWithChildren
+  '/_app/intelligence': typeof AppIntelligenceRouteWithChildren
   '/_app/onboarding': typeof AppOnboardingRoute
   '/_app/planning': typeof AppPlanningRoute
-  '/_app/workspace': typeof AppWorkspaceRoute
+  '/_app/workspace': typeof AppWorkspaceRouteWithChildren
   '/_app/': typeof AppIndexRoute
+  '/_app/decisions/$decisionId': typeof AppDecisionsDecisionIdRoute
+  '/_app/workspace/alerts': typeof AppWorkspaceAlertsRoute
+  '/_app/workspace/data-sources': typeof AppWorkspaceDataSourcesRoute
+  '/_app/workspace/integrations': typeof AppWorkspaceIntegrationsRoute
+  '/_app/workspace/organization': typeof AppWorkspaceOrganizationRoute
+  '/_app/workspace/people': typeof AppWorkspacePeopleRoute
+  '/_app/workspace/settings': typeof AppWorkspaceSettingsRoute
+  '/_app/decisions/': typeof AppDecisionsIndexRoute
+  '/_app/intelligence/': typeof AppIntelligenceIndexRoute
+  '/_app/workspace/': typeof AppWorkspaceIndexRoute
+  '/_app/intelligence/commodities/$commodityId': typeof AppIntelligenceCommoditiesCommodityIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -97,15 +196,34 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/planning'
     | '/workspace'
+    | '/decisions/$decisionId'
+    | '/workspace/alerts'
+    | '/workspace/data-sources'
+    | '/workspace/integrations'
+    | '/workspace/organization'
+    | '/workspace/people'
+    | '/workspace/settings'
+    | '/decisions/'
+    | '/intelligence/'
+    | '/workspace/'
+    | '/intelligence/commodities/$commodityId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/sign-in'
-    | '/decisions'
-    | '/intelligence'
     | '/onboarding'
     | '/planning'
-    | '/workspace'
     | '/'
+    | '/decisions/$decisionId'
+    | '/workspace/alerts'
+    | '/workspace/data-sources'
+    | '/workspace/integrations'
+    | '/workspace/organization'
+    | '/workspace/people'
+    | '/workspace/settings'
+    | '/decisions'
+    | '/intelligence'
+    | '/workspace'
+    | '/intelligence/commodities/$commodityId'
   id:
     | '__root__'
     | '/_app'
@@ -116,6 +234,17 @@ export interface FileRouteTypes {
     | '/_app/planning'
     | '/_app/workspace'
     | '/_app/'
+    | '/_app/decisions/$decisionId'
+    | '/_app/workspace/alerts'
+    | '/_app/workspace/data-sources'
+    | '/_app/workspace/integrations'
+    | '/_app/workspace/organization'
+    | '/_app/workspace/people'
+    | '/_app/workspace/settings'
+    | '/_app/decisions/'
+    | '/_app/intelligence/'
+    | '/_app/workspace/'
+    | '/_app/intelligence/commodities/$commodityId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -181,24 +310,154 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppWorkspaceRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/decisions/': {
+      id: '/_app/decisions/'
+      path: '/'
+      fullPath: '/decisions/'
+      preLoaderRoute: typeof AppDecisionsIndexRouteImport
+      parentRoute: typeof AppDecisionsRoute
+    }
+    '/_app/decisions/$decisionId': {
+      id: '/_app/decisions/$decisionId'
+      path: '/$decisionId'
+      fullPath: '/decisions/$decisionId'
+      preLoaderRoute: typeof AppDecisionsDecisionIdRouteImport
+      parentRoute: typeof AppDecisionsRoute
+    }
+    '/_app/intelligence/': {
+      id: '/_app/intelligence/'
+      path: '/'
+      fullPath: '/intelligence/'
+      preLoaderRoute: typeof AppIntelligenceIndexRouteImport
+      parentRoute: typeof AppIntelligenceRoute
+    }
+    '/_app/workspace/': {
+      id: '/_app/workspace/'
+      path: '/'
+      fullPath: '/workspace/'
+      preLoaderRoute: typeof AppWorkspaceIndexRouteImport
+      parentRoute: typeof AppWorkspaceRoute
+    }
+    '/_app/workspace/alerts': {
+      id: '/_app/workspace/alerts'
+      path: '/alerts'
+      fullPath: '/workspace/alerts'
+      preLoaderRoute: typeof AppWorkspaceAlertsRouteImport
+      parentRoute: typeof AppWorkspaceRoute
+    }
+    '/_app/workspace/data-sources': {
+      id: '/_app/workspace/data-sources'
+      path: '/data-sources'
+      fullPath: '/workspace/data-sources'
+      preLoaderRoute: typeof AppWorkspaceDataSourcesRouteImport
+      parentRoute: typeof AppWorkspaceRoute
+    }
+    '/_app/workspace/integrations': {
+      id: '/_app/workspace/integrations'
+      path: '/integrations'
+      fullPath: '/workspace/integrations'
+      preLoaderRoute: typeof AppWorkspaceIntegrationsRouteImport
+      parentRoute: typeof AppWorkspaceRoute
+    }
+    '/_app/workspace/organization': {
+      id: '/_app/workspace/organization'
+      path: '/organization'
+      fullPath: '/workspace/organization'
+      preLoaderRoute: typeof AppWorkspaceOrganizationRouteImport
+      parentRoute: typeof AppWorkspaceRoute
+    }
+    '/_app/workspace/people': {
+      id: '/_app/workspace/people'
+      path: '/people'
+      fullPath: '/workspace/people'
+      preLoaderRoute: typeof AppWorkspacePeopleRouteImport
+      parentRoute: typeof AppWorkspaceRoute
+    }
+    '/_app/workspace/settings': {
+      id: '/_app/workspace/settings'
+      path: '/settings'
+      fullPath: '/workspace/settings'
+      preLoaderRoute: typeof AppWorkspaceSettingsRouteImport
+      parentRoute: typeof AppWorkspaceRoute
+    }
+    '/_app/intelligence/commodities/$commodityId': {
+      id: '/_app/intelligence/commodities/$commodityId'
+      path: '/commodities/$commodityId'
+      fullPath: '/intelligence/commodities/$commodityId'
+      preLoaderRoute: typeof AppIntelligenceCommoditiesCommodityIdRouteImport
+      parentRoute: typeof AppIntelligenceRoute
+    }
   }
 }
 
+interface AppDecisionsRouteChildren {
+  AppDecisionsDecisionIdRoute: typeof AppDecisionsDecisionIdRoute
+  AppDecisionsIndexRoute: typeof AppDecisionsIndexRoute
+}
+
+const AppDecisionsRouteChildren: AppDecisionsRouteChildren = {
+  AppDecisionsDecisionIdRoute: AppDecisionsDecisionIdRoute,
+  AppDecisionsIndexRoute: AppDecisionsIndexRoute,
+}
+
+const AppDecisionsRouteWithChildren = AppDecisionsRoute._addFileChildren(
+  AppDecisionsRouteChildren,
+)
+
+interface AppIntelligenceRouteChildren {
+  AppIntelligenceIndexRoute: typeof AppIntelligenceIndexRoute
+  AppIntelligenceCommoditiesCommodityIdRoute: typeof AppIntelligenceCommoditiesCommodityIdRoute
+}
+
+const AppIntelligenceRouteChildren: AppIntelligenceRouteChildren = {
+  AppIntelligenceIndexRoute: AppIntelligenceIndexRoute,
+  AppIntelligenceCommoditiesCommodityIdRoute:
+    AppIntelligenceCommoditiesCommodityIdRoute,
+}
+
+const AppIntelligenceRouteWithChildren = AppIntelligenceRoute._addFileChildren(
+  AppIntelligenceRouteChildren,
+)
+
+interface AppWorkspaceRouteChildren {
+  AppWorkspaceAlertsRoute: typeof AppWorkspaceAlertsRoute
+  AppWorkspaceDataSourcesRoute: typeof AppWorkspaceDataSourcesRoute
+  AppWorkspaceIntegrationsRoute: typeof AppWorkspaceIntegrationsRoute
+  AppWorkspaceOrganizationRoute: typeof AppWorkspaceOrganizationRoute
+  AppWorkspacePeopleRoute: typeof AppWorkspacePeopleRoute
+  AppWorkspaceSettingsRoute: typeof AppWorkspaceSettingsRoute
+  AppWorkspaceIndexRoute: typeof AppWorkspaceIndexRoute
+}
+
+const AppWorkspaceRouteChildren: AppWorkspaceRouteChildren = {
+  AppWorkspaceAlertsRoute: AppWorkspaceAlertsRoute,
+  AppWorkspaceDataSourcesRoute: AppWorkspaceDataSourcesRoute,
+  AppWorkspaceIntegrationsRoute: AppWorkspaceIntegrationsRoute,
+  AppWorkspaceOrganizationRoute: AppWorkspaceOrganizationRoute,
+  AppWorkspacePeopleRoute: AppWorkspacePeopleRoute,
+  AppWorkspaceSettingsRoute: AppWorkspaceSettingsRoute,
+  AppWorkspaceIndexRoute: AppWorkspaceIndexRoute,
+}
+
+const AppWorkspaceRouteWithChildren = AppWorkspaceRoute._addFileChildren(
+  AppWorkspaceRouteChildren,
+)
+
 interface AppRouteChildren {
-  AppDecisionsRoute: typeof AppDecisionsRoute
-  AppIntelligenceRoute: typeof AppIntelligenceRoute
+  AppDecisionsRoute: typeof AppDecisionsRouteWithChildren
+  AppIntelligenceRoute: typeof AppIntelligenceRouteWithChildren
   AppOnboardingRoute: typeof AppOnboardingRoute
   AppPlanningRoute: typeof AppPlanningRoute
-  AppWorkspaceRoute: typeof AppWorkspaceRoute
+  AppWorkspaceRoute: typeof AppWorkspaceRouteWithChildren
   AppIndexRoute: typeof AppIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
-  AppDecisionsRoute: AppDecisionsRoute,
-  AppIntelligenceRoute: AppIntelligenceRoute,
+  AppDecisionsRoute: AppDecisionsRouteWithChildren,
+  AppIntelligenceRoute: AppIntelligenceRouteWithChildren,
   AppOnboardingRoute: AppOnboardingRoute,
   AppPlanningRoute: AppPlanningRoute,
-  AppWorkspaceRoute: AppWorkspaceRoute,
+  AppWorkspaceRoute: AppWorkspaceRouteWithChildren,
   AppIndexRoute: AppIndexRoute,
 }
 
