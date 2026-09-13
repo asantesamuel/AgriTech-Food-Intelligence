@@ -20,6 +20,7 @@ import { Route as AppWorkspaceRouteImport } from './routes/_app/workspace'
 import { Route as AppDecisionsIndexRouteImport } from './routes/_app/decisions.index'
 import { Route as AppDecisionsDecisionIdRouteImport } from './routes/_app/decisions.$decisionId'
 import { Route as AppIntelligenceIndexRouteImport } from './routes/_app/intelligence.index'
+import { Route as AppIntelligenceMarketsRouteImport } from './routes/_app/intelligence.markets'
 import { Route as AppWorkspaceIndexRouteImport } from './routes/_app/workspace.index'
 import { Route as AppWorkspaceAlertsRouteImport } from './routes/_app/workspace.alerts'
 import { Route as AppWorkspaceDataSourcesRouteImport } from './routes/_app/workspace.data-sources'
@@ -84,6 +85,11 @@ const AppIntelligenceIndexRoute = AppIntelligenceIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppIntelligenceRoute,
 } as any)
+const AppIntelligenceMarketsRoute = AppIntelligenceMarketsRouteImport.update({
+  id: '/markets',
+  path: '/markets',
+  getParentRoute: () => AppIntelligenceRoute,
+} as any)
 const AppWorkspaceIndexRoute = AppWorkspaceIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -143,6 +149,7 @@ export interface FileRoutesByFullPath {
   '/planning': typeof AppPlanningRoute
   '/workspace': typeof AppWorkspaceRouteWithChildren
   '/decisions/$decisionId': typeof AppDecisionsDecisionIdRoute
+  '/intelligence/markets': typeof AppIntelligenceMarketsRoute
   '/workspace/alerts': typeof AppWorkspaceAlertsRoute
   '/workspace/data-sources': typeof AppWorkspaceDataSourcesRoute
   '/workspace/integrations': typeof AppWorkspaceIntegrationsRoute
@@ -161,6 +168,7 @@ export interface FileRoutesByTo {
   '/planning': typeof AppPlanningRoute
   '/': typeof AppIndexRoute
   '/decisions/$decisionId': typeof AppDecisionsDecisionIdRoute
+  '/intelligence/markets': typeof AppIntelligenceMarketsRoute
   '/workspace/alerts': typeof AppWorkspaceAlertsRoute
   '/workspace/data-sources': typeof AppWorkspaceDataSourcesRoute
   '/workspace/integrations': typeof AppWorkspaceIntegrationsRoute
@@ -184,6 +192,7 @@ export interface FileRoutesById {
   '/_app/workspace': typeof AppWorkspaceRouteWithChildren
   '/_app/': typeof AppIndexRoute
   '/_app/decisions/$decisionId': typeof AppDecisionsDecisionIdRoute
+  '/_app/intelligence/markets': typeof AppIntelligenceMarketsRoute
   '/_app/workspace/alerts': typeof AppWorkspaceAlertsRoute
   '/_app/workspace/data-sources': typeof AppWorkspaceDataSourcesRoute
   '/_app/workspace/integrations': typeof AppWorkspaceIntegrationsRoute
@@ -207,6 +216,7 @@ export interface FileRouteTypes {
     | '/planning'
     | '/workspace'
     | '/decisions/$decisionId'
+    | '/intelligence/markets'
     | '/workspace/alerts'
     | '/workspace/data-sources'
     | '/workspace/integrations'
@@ -225,6 +235,7 @@ export interface FileRouteTypes {
     | '/planning'
     | '/'
     | '/decisions/$decisionId'
+    | '/intelligence/markets'
     | '/workspace/alerts'
     | '/workspace/data-sources'
     | '/workspace/integrations'
@@ -247,6 +258,7 @@ export interface FileRouteTypes {
     | '/_app/workspace'
     | '/_app/'
     | '/_app/decisions/$decisionId'
+    | '/_app/intelligence/markets'
     | '/_app/workspace/alerts'
     | '/_app/workspace/data-sources'
     | '/_app/workspace/integrations'
@@ -344,6 +356,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIntelligenceIndexRouteImport
       parentRoute: typeof AppIntelligenceRoute
     }
+    '/_app/intelligence/markets': {
+      id: '/_app/intelligence/markets'
+      path: '/markets'
+      fullPath: '/intelligence/markets'
+      preLoaderRoute: typeof AppIntelligenceMarketsRouteImport
+      parentRoute: typeof AppIntelligenceRoute
+    }
     '/_app/workspace/': {
       id: '/_app/workspace/'
       path: '/'
@@ -425,12 +444,14 @@ const AppDecisionsRouteWithChildren = AppDecisionsRoute._addFileChildren(
 )
 
 interface AppIntelligenceRouteChildren {
+  AppIntelligenceMarketsRoute: typeof AppIntelligenceMarketsRoute
   AppIntelligenceIndexRoute: typeof AppIntelligenceIndexRoute
   AppIntelligenceCommoditiesCommodityIdRoute: typeof AppIntelligenceCommoditiesCommodityIdRoute
   AppIntelligenceCommoditiesIndexRoute: typeof AppIntelligenceCommoditiesIndexRoute
 }
 
 const AppIntelligenceRouteChildren: AppIntelligenceRouteChildren = {
+  AppIntelligenceMarketsRoute: AppIntelligenceMarketsRoute,
   AppIntelligenceIndexRoute: AppIntelligenceIndexRoute,
   AppIntelligenceCommoditiesCommodityIdRoute:
     AppIntelligenceCommoditiesCommodityIdRoute,

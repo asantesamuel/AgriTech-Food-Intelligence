@@ -1,5 +1,5 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
-import { createCommodityExplorer, createDashboard, createPlatform } from '@/mocks/factories'
+import { createCommodityExplorer, createDashboard, createMarketExplorer, createPlatform } from '@/mocks/factories'
 import { resetMockPlatformState } from '@/mocks/handlers'
 import { mockServer } from '@/mocks/server'
 import { ApiError, dashboardService, decisionService, intelligenceService, platformService } from '@/services'
@@ -83,6 +83,21 @@ describe('mock data and service boundary', () => {
     expect(createCommodityExplorer({}, 'stale').items.every((item) => item.currentPrice.freshness.status === 'stale')).toBe(true)
     expect(createCommodityExplorer({}, 'low-confidence').items.every((item) => item.forecastSummary?.confidence.band === 'low')).toBe(true)
     expect(createCommodityExplorer({}, 'partial').items.some((item) => !item.forecastSummary || !item.riskSummary)).toBe(true)
+  })
+
+  it('serves geocoded market summaries with commodity and risk filters', async () => {
+    const snapshot = await intelligenceService.getMarketExplorer({ commodityId: 'commodity-tomato', risk: 'high' }, { latencyMs: 0 })
+    expect(snapshot.commodity.id).toBe('commodity-tomato')
+    expect(snapshot.locations).toHaveLength(1)
+    expect(snapshot.locations[0]?.market.location.point).toBeDefined()
+    expect(snapshot.locations[0]?.risk?.severity).toBe('high')
+  })
+
+  it('keeps a list fallback when geographic rendering is unavailable', () => {
+    const snapshot = createMarketExplorer({}, 'partial')
+    expect(snapshot.mapAvailable).toBe(false)
+    expect(snapshot.locations.length).toBeGreaterThan(0)
+    expect(snapshot.locations.some((location) => location.risk === null)).toBe(true)
   })
 
   it('enforces and records the complete decision lifecycle', async () => {

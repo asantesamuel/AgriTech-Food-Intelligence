@@ -1,4 +1,4 @@
-import { catalogSnapshotSchema, commodityExplorerQuerySchema, commodityExplorerSnapshotSchema, commodityIntelligenceSnapshotSchema, dashboardSnapshotSchema, decisionQueueSnapshotSchema, decisionSchema, marketPulseSnapshotSchema, platformSnapshotSchema, type CatalogSnapshot, type CommodityExplorerQueryInput, type CommodityExplorerSnapshot, type CommodityIntelligenceSnapshot, type DashboardSnapshot, type Decision, type DecisionQueueSnapshot, type MarketPulseSnapshot, type PlatformSnapshot } from '@/domain'
+import { catalogSnapshotSchema, commodityExplorerQuerySchema, commodityExplorerSnapshotSchema, commodityIntelligenceSnapshotSchema, dashboardSnapshotSchema, decisionQueueSnapshotSchema, decisionSchema, marketExplorerQuerySchema, marketExplorerSnapshotSchema, marketPulseSnapshotSchema, platformSnapshotSchema, type CatalogSnapshot, type CommodityExplorerQueryInput, type CommodityExplorerSnapshot, type CommodityIntelligenceSnapshot, type DashboardSnapshot, type Decision, type DecisionQueueSnapshot, type MarketExplorerQueryInput, type MarketExplorerSnapshot, type MarketPulseSnapshot, type PlatformSnapshot } from '@/domain'
 import type { MockScenario } from './scenarios'
 
 const NOW = '2026-09-07T12:00:00+00:00'
@@ -18,8 +18,9 @@ export function createCatalog(seed = 42): CatalogSnapshot {
       { id: 'region-northern', name: 'Northern', countryCode: 'GH', centroid: { latitude: 9.4034, longitude: -0.8424 } },
     ],
     markets: [
-      { id: 'market-agbogbloshie', name: 'Agbogbloshie Wholesale', type: 'wholesale', location: { regionId: 'region-greater-accra', district: 'Accra' }, active: true },
-      { id: 'market-kejetia', name: 'Kejetia Market', type: 'wholesale', location: { regionId: 'region-ashanti', district: 'Kumasi' }, active: true },
+      { id: 'market-agbogbloshie', name: 'Agbogbloshie Wholesale', type: 'wholesale', location: { regionId: 'region-greater-accra', district: 'Accra', point: { latitude: 5.5504, longitude: -0.2208 } }, active: true },
+      { id: 'market-kejetia', name: 'Kejetia Market', type: 'wholesale', location: { regionId: 'region-ashanti', district: 'Kumasi', point: { latitude: 6.6962, longitude: -1.6244 } }, active: true },
+      { id: 'market-tamale-central', name: 'Tamale Central Market', type: 'wholesale', location: { regionId: 'region-northern', district: 'Tamale', point: { latitude: 9.4008, longitude: -0.8393 } }, active: true },
     ],
     commodities: [
       { id: 'commodity-maize', name: 'Maize', category: 'cereal', defaultUnit: 'kg', aliases: ['corn'] },
@@ -188,6 +189,24 @@ export function createCommodityIntelligence(commodityId = 'commodity-tomato', sc
     recommendations: dashboard.recommendations.filter((item) => !item.commodityId || item.commodityId === commodity.id),
     corridor: { id: 'corridor-tomato-ashanti-accra', commodityId: commodity.id, sourceRegionId: source.id, destinationRegionId: destination.id, availableVolume: 126, committedVolume: 46, unit: 'tonne', leadTimeHours: 7.5, pressure: 'tightening', summary: 'Available Ashanti tomato volume can cover the next Greater Accra purchasing window before modeled prices rise.' },
   })
+}
+
+export function createMarketExplorer(queryInput: MarketExplorerQueryInput = {}, scenario: Exclude<MockScenario, 'error'> = 'success'): MarketExplorerSnapshot {
+  const query = marketExplorerQuerySchema.parse(queryInput)
+  const catalog = createCatalog()
+  const commodity = catalog.commodities.find((item) => item.id === query.commodityId) ?? catalog.commodities.find((item) => item.id === 'commodity-tomato')!
+  const riskLevels = ['high', 'medium', 'low'] as const
+  const isStale = scenario === 'stale'
+  const freshness = { observedAt: isStale ? STALE : NOW, receivedAt: NOW, status: isStale ? 'stale' as const : 'fresh' as const }
+  let locations = catalog.markets.map((market, index) => {
+    const region = catalog.regions.find((item) => item.id === market.location.regionId)!
+    const severity = scenario === 'critical-risk' && index === 0 ? 'critical' as const : riskLevels[index]!
+    const risk = scenario === 'partial' && index === 2 ? null : { severity, probability: 0.78 - index * 0.16, valueAtRisk: { amount: 684_000 - index * 181_000, currency: 'GHS' as const }, drivers: index === 0 ? ['Peak arrivals', 'Limited cold storage'] : ['Uneven arrivals', 'Transport pressure'] }
+    return { market, region, currentPrice: { value: 9.4 + index * 1.85, unit: { currency: 'GHS' as const, per: commodity.defaultUnit }, changePercent: 18.6 - index * 9.2, freshness }, risk }
+  })
+  if (query.risk) locations = locations.filter((item) => item.risk?.severity === query.risk)
+  if (scenario === 'empty') locations = []
+  return marketExplorerSnapshotSchema.parse({ generatedAt: NOW, state: scenario, mapAvailable: scenario !== 'partial', query, commodity, commodities: catalog.commodities, locations })
 }
 
 export function createDecisions(): DecisionQueueSnapshot {

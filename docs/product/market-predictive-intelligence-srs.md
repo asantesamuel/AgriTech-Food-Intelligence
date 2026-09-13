@@ -27,6 +27,8 @@ The frontend currently provides:
 - a Procurement Manager-oriented Market Pulse;
 - a searchable, filterable, sortable, and paginated Commodity Explorer backed
   by a validated task read model;
+- a Ghana Market Explorer with selectable geocoded markets, price/risk evidence,
+  commodity and risk filters, and an accessible list fallback;
 - a tomato intelligence page linking observed prices, a 30-day modeled price
   outlook, model confidence, risk, the Ashanti-to-Greater Accra corridor, and a
   purchase-timing decision;
@@ -40,7 +42,6 @@ The frontend currently provides:
 
 - SCRUM-85: reusable commodity intelligence across commodities, regions, and
   forecast horizons;
-- SCRUM-86: geographic Market Explorer with a non-map fallback;
 - SCRUM-87: cross-commodity Forecast Center;
 - SCRUM-88: combined Supply & Demand workspace;
 - SCRUM-89: typed shortage and glut detection;

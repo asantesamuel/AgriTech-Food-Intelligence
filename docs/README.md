@@ -20,6 +20,8 @@ evidence needed to maintain the system.
   describes the frontend modules, read-model boundaries, and request flow.
 - [Commodity Explorer feature specification](features/commodity-explorer.md)
   is the implementation companion for SCRUM-84.
+- [Market Explorer feature specification](features/market-explorer.md) records
+  the SCRUM-86 geographic and non-map experience.
 - [Market & Predictive Intelligence validation plan](testing/market-predictive-validation.md)
   defines the verification evidence expected for this phase.
 - [Architecture decision records](adr/README.md) records durable technical

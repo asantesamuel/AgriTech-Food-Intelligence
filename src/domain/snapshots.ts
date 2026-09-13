@@ -47,6 +47,26 @@ export const commodityExplorerSnapshotSchema = z.object({
   pageInfo: z.object({ page: z.number().int().positive(), pageSize: z.number().int().positive(), totalItems: z.number().int().nonnegative(), totalPages: z.number().int().nonnegative() }),
   items: z.array(commodityExplorerItemSchema),
 })
+export const marketExplorerQuerySchema = z.object({
+  commodityId: entityIdSchema.default('commodity-tomato'),
+  risk: severitySchema.optional(),
+  marketId: entityIdSchema.optional(),
+})
+export const marketExplorerLocationSchema = z.object({
+  market: marketSchema.refine((value) => Boolean(value.location.point), 'Market explorer locations require coordinates'),
+  region: regionSchema,
+  currentPrice: z.object({ value: z.number().nonnegative(), unit: priceUnitSchema, changePercent: z.number().min(-100).max(100), freshness: freshnessSchema }),
+  risk: z.object({ severity: severitySchema, probability: probabilitySchema, valueAtRisk: moneySchema, drivers: z.array(z.string().min(1)) }).nullable(),
+})
+export const marketExplorerSnapshotSchema = z.object({
+  generatedAt: isoDateTimeSchema,
+  state: dashboardSnapshotSchema.shape.state,
+  mapAvailable: z.boolean(),
+  query: marketExplorerQuerySchema,
+  commodity: commoditySchema,
+  commodities: z.array(commoditySchema),
+  locations: z.array(marketExplorerLocationSchema),
+})
 export const decisionQueueSnapshotSchema = z.object({ generatedAt: isoDateTimeSchema, decisions: z.array(decisionSchema) })
 
 export type DashboardKpi = z.infer<typeof dashboardKpiSchema>
@@ -62,4 +82,8 @@ export type CommodityExplorerQuery = z.infer<typeof commodityExplorerQuerySchema
 export type CommodityExplorerQueryInput = z.input<typeof commodityExplorerQuerySchema>
 export type CommodityExplorerItem = z.infer<typeof commodityExplorerItemSchema>
 export type CommodityExplorerSnapshot = z.infer<typeof commodityExplorerSnapshotSchema>
+export type MarketExplorerQuery = z.infer<typeof marketExplorerQuerySchema>
+export type MarketExplorerQueryInput = z.input<typeof marketExplorerQuerySchema>
+export type MarketExplorerLocation = z.infer<typeof marketExplorerLocationSchema>
+export type MarketExplorerSnapshot = z.infer<typeof marketExplorerSnapshotSchema>
 export type DecisionQueueSnapshot = z.infer<typeof decisionQueueSnapshotSchema>

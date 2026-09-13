@@ -39,6 +39,7 @@ Current intelligence operations are:
 - `GET /api/intelligence/market-pulse`;
 - `GET /api/intelligence/commodities`;
 - `GET /api/intelligence/commodities/:commodityId`.
+- `GET /api/intelligence/markets`.
 
 The catalog operation is `GET /api/catalog`. It returns canonical regions,
 markets, and commodities; the explorer uses its own task-oriented read model.
@@ -130,6 +131,7 @@ transport adapter.
 | --- | --- | --- |
 | Commodity catalog | Canonical catalog snapshot | Remains the source for setup/reference choices |
 | Commodity comparison | Explorer-specific paged snapshot | Extend only when a new comparison field is approved |
+| Geographic market comparison | Market snapshot with coordinates and list fallback | Replace schematic map transport with production GIS without changing feature ownership |
 | Commodity detail | Tomato-centered task read model | Generalized by SCRUM-85 |
 | Forecast chart | Accessible observed/forecast component | Reused by detail and forecast center |
 | Supply-demand | Domain entity only | Task snapshot and service in SCRUM-88 |

@@ -1,7 +1,7 @@
 import { delay, http, HttpResponse } from 'msw'
 import { decisionSchema, decisionTransitionInputSchema, inviteMemberInputSchema, updateMemberInputSchema, updateOrganizationInputSchema } from '@/domain'
-import { commodityExplorerQuerySchema } from '@/domain'
-import { createCatalog, createCommodityExplorer, createCommodityIntelligence, createDashboard, createDecisions, createMarketPulse, createPlatform } from './factories'
+import { commodityExplorerQuerySchema, marketExplorerQuerySchema } from '@/domain'
+import { createCatalog, createCommodityExplorer, createCommodityIntelligence, createDashboard, createDecisions, createMarketExplorer, createMarketPulse, createPlatform } from './factories'
 import { readMockLatency, readMockScenario } from './scenarios'
 
 async function prepare(url: URL) {
@@ -120,6 +120,14 @@ export const handlers = [
     const scenario = await prepare(url)
     if (scenario === 'error') return HttpResponse.json({ message: 'Commodity intelligence unavailable' }, { status: 503 })
     return HttpResponse.json(createCommodityIntelligence(String(params.commodityId), scenario))
+  }),
+  http.get('*/api/intelligence/markets', async ({ request }) => {
+    const url = new URL(request.url)
+    const scenario = await prepare(url)
+    if (scenario === 'error') return HttpResponse.json({ message: 'Market explorer unavailable' }, { status: 503 })
+    const parsed = marketExplorerQuerySchema.safeParse(Object.fromEntries(url.searchParams))
+    if (!parsed.success) return HttpResponse.json({ message: 'Invalid market explorer query' }, { status: 400 })
+    return HttpResponse.json(createMarketExplorer(parsed.data, scenario))
   }),
   http.get('*/api/decisions', async ({ request }) => {
     const scenario = await prepare(new URL(request.url))

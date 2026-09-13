@@ -1,0 +1,46 @@
+import { Link } from '@tanstack/react-router'
+import { ArrowRight, MapPin, TrendingDown, TrendingUp } from 'lucide-react'
+
+import type { MarketExplorerLocation, MarketExplorerQuery } from '@/domain'
+import { Badge, Button, PageHeader, SemanticBadge, Skeleton, StatePanel } from '@/shared/ui'
+import { useMarketExplorer } from './intelligence-hooks'
+
+interface Props { query: MarketExplorerQuery; onQueryChange: (changes: Partial<MarketExplorerQuery>) => void }
+const selectClass = 'h-10 rounded-md border border-input bg-card px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+
+export function MarketExplorer({ query, onQueryChange }: Readonly<Props>) {
+  const result = useMarketExplorer(query)
+  if (result.isPending) return <Page><Skeleton className="h-32" /><Skeleton className="h-[38rem]" /></Page>
+  if (result.isError) return <Page><PageHeader eyebrow="Intelligence · Markets" title="Ghana market explorer" /><StatePanel kind="error" title="Market explorer unavailable" description="Retry the request or return the Demo condition to Ready." action={{ label: 'Retry', onClick: () => void result.refetch() }} /></Page>
+
+  const data = result.data
+  const selected = data.locations.find((item) => item.market.id === query.marketId) ?? data.locations[0]
+  return <Page>
+    <PageHeader eyebrow="Intelligence · Markets" title="Where is market pressure changing?" description="Compare price movement and financial exposure across Ghanaian market locations before investigating a commodity." meta={<div className="flex flex-wrap gap-2"><Badge tone="info">{data.commodity.name}</Badge><Badge>{data.locations.length} visible markets</Badge><Badge>Illustrative market network</Badge></div>} />
+    {data.state === 'stale' ? <Notice>Market observations are stale. Confirm collection time before acting.</Notice> : null}
+    {data.state === 'low-confidence' ? <Notice>Model confidence is low. Location summaries remain directional evidence only.</Notice> : null}
+    {data.state === 'critical-risk' ? <Notice>Critical financial exposure is present in the visible market network.</Notice> : null}
+
+    <section className="panel flex flex-wrap gap-3 rounded-lg p-4" aria-label="Market map filters">
+      <label className="grid min-w-52 gap-1 text-sm font-medium">Commodity<select className={selectClass} value={query.commodityId} onChange={(event) => onQueryChange({ commodityId: event.target.value, marketId: undefined })}>{data.commodities.map((commodity) => <option value={commodity.id} key={commodity.id}>{commodity.name}</option>)}</select></label>
+      <label className="grid min-w-44 gap-1 text-sm font-medium">Waste risk<select className={selectClass} value={query.risk ?? ''} onChange={(event) => onQueryChange({ risk: event.target.value as MarketExplorerQuery['risk'] || undefined, marketId: undefined })}><option value="">All risk levels</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></label>
+      {query.risk ? <Button variant="ghost" className="self-end" onClick={() => onQueryChange({ risk: undefined, marketId: undefined })}>Clear risk filter</Button> : null}
+    </section>
+
+    {!data.locations.length ? <StatePanel kind="empty" title={query.risk ? 'No markets match this risk filter' : 'No market locations are available'} description={query.risk ? 'Clear the risk filter to restore the market network.' : 'No geocoded market observations exist in this demo condition.'} /> : <section className="grid gap-5 xl:grid-cols-[minmax(0,1.4fr)_minmax(20rem,0.6fr)]">
+      {data.mapAvailable ? <GhanaMap locations={data.locations} selectedId={selected?.market.id} onSelect={(marketId) => onQueryChange({ marketId })} /> : <StatePanel kind="empty" title="Map unavailable" description="Geographic rendering is unavailable in this condition. Use the accessible market list to continue." />}
+      <div className="grid content-start gap-4">
+        <div className="panel rounded-lg p-5"><p className="data-label">Selected location</p>{selected ? <LocationSummary item={selected} commodityId={data.commodity.id} /> : <p className="mt-3 text-sm text-muted-foreground">Choose a visible location.</p>}</div>
+        <div className="panel overflow-hidden rounded-lg"><header className="border-b px-5 py-4"><p className="data-label">Accessible map alternative</p><h2 className="mt-1 font-semibold">Visible markets</h2></header><div className="divide-y">{data.locations.map((item) => <button type="button" key={item.market.id} onClick={() => onQueryChange({ marketId: item.market.id })} aria-pressed={selected?.market.id === item.market.id} className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"><span><strong className="block">{item.market.name}</strong><span className="text-xs text-muted-foreground">{item.region.name}</span></span>{item.risk ? <SemanticBadge signal="risk" level={item.risk.severity} /> : <Badge>risk unavailable</Badge>}</button>)}</div></div>
+      </div>
+    </section>}
+  </Page>
+}
+
+function GhanaMap({ locations, selectedId, onSelect }: Readonly<{ locations: MarketExplorerLocation[]; selectedId?: string; onSelect: (id: string) => void }>) {
+  return <div className="relative min-h-[34rem] overflow-hidden rounded-xl border bg-[linear-gradient(145deg,#eef8f3,#f8fbf9)]" role="group" aria-label="Interactive Ghana market map"><svg viewBox="0 0 500 650" className="absolute inset-0 size-full" aria-hidden><path d="M178 43 333 40 354 117 421 176 398 254 432 325 389 394 373 504 302 611 232 598 197 511 131 461 105 354 130 278 95 196 145 133Z" fill="#dcece4" stroke="#75a38e" strokeWidth="3" /><path d="M126 347 390 393M145 134 398 254M198 510 373 504" stroke="#a9c7b8" strokeDasharray="7 8" /></svg><div className="absolute left-4 top-4 rounded-md border bg-white/90 px-3 py-2 text-xs text-muted-foreground shadow-sm">Marker color shows waste risk; select a marker for evidence.</div>{locations.map((item) => { const point = item.market.location.point!; const left = 18 + ((point.longitude + 3.5) / 4.7) * 64; const top = 10 + ((11.2 - point.latitude) / 6.7) * 80; const tone = item.risk?.severity === 'critical' || item.risk?.severity === 'high' ? 'bg-danger' : item.risk?.severity === 'medium' ? 'bg-warning' : 'bg-success'; return <button type="button" key={item.market.id} onClick={() => onSelect(item.market.id)} aria-label={`${item.market.name}, ${item.region.name}${item.risk ? `, ${item.risk.severity} risk` : ''}`} aria-pressed={selectedId === item.market.id} style={{ left: `${left}%`, top: `${top}%` }} className={`absolute -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-white ${tone} p-2 text-white shadow-lg transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/30 ${selectedId === item.market.id ? 'scale-125 ring-4 ring-primary/20' : ''}`}><MapPin className="size-5" /></button> })}</div>
+}
+
+function LocationSummary({ item, commodityId }: Readonly<{ item: MarketExplorerLocation; commodityId: string }>) { const Trend = item.currentPrice.changePercent < 0 ? TrendingDown : TrendingUp; return <div className="mt-3"><div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-xl font-semibold">{item.market.name}</h2><p className="text-sm text-muted-foreground">{item.region.name} · {item.market.location.district}</p></div>{item.risk ? <SemanticBadge signal="risk" level={item.risk.severity} /> : <Badge>risk unavailable</Badge>}</div><dl className="mt-5 grid grid-cols-2 gap-4 border-y py-4"><div><dt className="data-label">Current price</dt><dd className="mt-2 font-mono font-semibold">GHS {item.currentPrice.value.toFixed(2)}/{item.currentPrice.unit.per}</dd></div><div><dt className="data-label">Price movement</dt><dd className="mt-2 flex items-center gap-1 font-mono font-semibold"><Trend className="size-4" />{item.currentPrice.changePercent > 0 ? '+' : ''}{item.currentPrice.changePercent.toFixed(1)}%</dd></div><div><dt className="data-label">Value at risk</dt><dd className="mt-2 font-mono font-semibold">{item.risk ? `GHS ${item.risk.valueAtRisk.amount.toLocaleString('en-GH')}` : 'Unavailable'}</dd></div><div><dt className="data-label">Data freshness</dt><dd className="mt-2">{item.currentPrice.freshness.status === 'unknown' ? <Badge>unknown</Badge> : <SemanticBadge signal="freshness" level={item.currentPrice.freshness.status} />}</dd></div></dl>{item.risk ? <p className="mt-4 text-sm text-muted-foreground">Drivers: {item.risk.drivers.join(', ')}.</p> : null}<Button asChild className="mt-5 w-full"><Link to="/intelligence/commodities/$commodityId" params={{ commodityId }}>Open commodity intelligence <ArrowRight /></Link></Button></div> }
+function Notice({ children }: Readonly<{ children: React.ReactNode }>) { return <div role="status" className="rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning">{children}</div> }
+function Page({ children }: Readonly<{ children: React.ReactNode }>) { return <div className="mx-auto grid w-full max-w-[100rem] gap-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">{children}</div> }
