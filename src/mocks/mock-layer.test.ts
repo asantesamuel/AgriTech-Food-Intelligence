@@ -1,5 +1,5 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
-import { createDashboard, createPlatform } from '@/mocks/factories'
+import { createCommodityExplorer, createDashboard, createPlatform } from '@/mocks/factories'
 import { resetMockPlatformState } from '@/mocks/handlers'
 import { mockServer } from '@/mocks/server'
 import { ApiError, dashboardService, decisionService, intelligenceService, platformService } from '@/services'
@@ -60,6 +60,29 @@ describe('mock data and service boundary', () => {
     expect(pulse.signals[0]?.decisionId).toBe('decision-tomato-purchase')
     expect(tomato.commodity.id).toBe('commodity-tomato')
     expect(tomato.forecast?.confidence.band).toBe('high')
+  })
+
+  it('serves a ranked, paginated commodity explorer through the service boundary', async () => {
+    const snapshot = await intelligenceService.getCommodityExplorer({ pageSize: 10 }, { latencyMs: 0 })
+    expect(snapshot.items[0]?.commodity.id).toBe('commodity-tomato')
+    expect(snapshot.items).toHaveLength(10)
+    expect(snapshot.pageInfo).toMatchObject({ page: 1, pageSize: 10, totalItems: 12, totalPages: 2 })
+  })
+
+  it('combines commodity explorer filters and supports alias search', async () => {
+    const aliasMatch = await intelligenceService.getCommodityExplorer({ q: 'MANIOC' }, { latencyMs: 0 })
+    expect(aliasMatch.items.map((item) => item.commodity.id)).toEqual(['commodity-cassava'])
+
+    const filtered = await intelligenceService.getCommodityExplorer({ category: 'vegetable', region: 'region-greater-accra', direction: 'rising', risk: 'high' }, { latencyMs: 0 })
+    expect(filtered.items.every((item) => item.commodity.category === 'vegetable' && item.referenceRegionId === 'region-greater-accra' && item.direction === 'rising' && item.riskSummary?.severity === 'high')).toBe(true)
+  })
+
+  it('keeps explorer scenarios explicit and deterministic', () => {
+    expect(createCommodityExplorer({}, 'success', 17)).toEqual(createCommodityExplorer({}, 'success', 17))
+    expect(createCommodityExplorer({}, 'empty').items).toHaveLength(0)
+    expect(createCommodityExplorer({}, 'stale').items.every((item) => item.currentPrice.freshness.status === 'stale')).toBe(true)
+    expect(createCommodityExplorer({}, 'low-confidence').items.every((item) => item.forecastSummary?.confidence.band === 'low')).toBe(true)
+    expect(createCommodityExplorer({}, 'partial').items.some((item) => !item.forecastSummary || !item.riskSummary)).toBe(true)
   })
 
   it('enforces and records the complete decision lifecycle', async () => {

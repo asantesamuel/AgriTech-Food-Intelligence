@@ -1,4 +1,4 @@
-import { catalogSnapshotSchema, commodityIntelligenceSnapshotSchema, dashboardSnapshotSchema, decisionQueueSnapshotSchema, decisionSchema, marketPulseSnapshotSchema, platformSnapshotSchema, type CatalogSnapshot, type CommodityIntelligenceSnapshot, type DashboardSnapshot, type Decision, type DecisionQueueSnapshot, type MarketPulseSnapshot, type PlatformSnapshot } from '@/domain'
+import { catalogSnapshotSchema, commodityExplorerQuerySchema, commodityExplorerSnapshotSchema, commodityIntelligenceSnapshotSchema, dashboardSnapshotSchema, decisionQueueSnapshotSchema, decisionSchema, marketPulseSnapshotSchema, platformSnapshotSchema, type CatalogSnapshot, type CommodityExplorerQueryInput, type CommodityExplorerSnapshot, type CommodityIntelligenceSnapshot, type DashboardSnapshot, type Decision, type DecisionQueueSnapshot, type MarketPulseSnapshot, type PlatformSnapshot } from '@/domain'
 import type { MockScenario } from './scenarios'
 
 const NOW = '2026-09-07T12:00:00+00:00'
@@ -25,6 +25,15 @@ export function createCatalog(seed = 42): CatalogSnapshot {
       { id: 'commodity-maize', name: 'Maize', category: 'cereal', defaultUnit: 'kg', aliases: ['corn'] },
       { id: 'commodity-tomato', name: 'Tomato', category: 'vegetable', defaultUnit: 'crate', aliases: [] },
       { id: 'commodity-yam', name: 'Yam', category: 'tuber', defaultUnit: 'kg', aliases: [] },
+      { id: 'commodity-cassava', name: 'Cassava', category: 'tuber', defaultUnit: 'kg', aliases: ['manioc'] },
+      { id: 'commodity-plantain', name: 'Plantain', category: 'fruit', defaultUnit: 'kg', aliases: [] },
+      { id: 'commodity-rice', name: 'Rice', category: 'cereal', defaultUnit: 'bag', aliases: [] },
+      { id: 'commodity-onion', name: 'Onion', category: 'vegetable', defaultUnit: 'bag', aliases: ['onions'] },
+      { id: 'commodity-pepper', name: 'Pepper', category: 'vegetable', defaultUnit: 'crate', aliases: ['chilli'] },
+      { id: 'commodity-cowpea', name: 'Cowpea', category: 'legume', defaultUnit: 'bag', aliases: ['black-eyed pea'] },
+      { id: 'commodity-groundnut', name: 'Groundnut', category: 'legume', defaultUnit: 'bag', aliases: ['peanut'] },
+      { id: 'commodity-mango', name: 'Mango', category: 'fruit', defaultUnit: 'crate', aliases: [] },
+      { id: 'commodity-pineapple', name: 'Pineapple', category: 'fruit', defaultUnit: 'crate', aliases: [] },
     ].sort(() => random() - 0.5),
   })
 }
@@ -100,6 +109,63 @@ export function createMarketPulse(scenario: Exclude<MockScenario, 'error'> = 'su
     forecasts: dashboard.forecasts,
     alerts: dashboard.alerts,
   })
+}
+
+export function createCommodityExplorer(queryInput: CommodityExplorerQueryInput = {}, scenario: Exclude<MockScenario, 'error'> = 'success', seed = 42): CommodityExplorerSnapshot {
+  const query = commodityExplorerQuerySchema.parse(queryInput)
+  const catalog = createCatalog(seed)
+  const random = seeded(seed)
+  const isStale = scenario === 'stale'
+  const freshness = { observedAt: isStale ? STALE : NOW, receivedAt: NOW, status: isStale ? 'stale' as const : 'fresh' as const }
+  const confidence = scenario === 'low-confidence' ? { score: 0.38, band: 'low' as const } : { score: 0.84, band: 'high' as const }
+  const severities = ['high', 'medium', 'low', 'medium'] as const
+  const commodities = [...catalog.commodities].sort((left, right) => left.name.localeCompare(right.name))
+  let items = commodities.map((commodity, index) => {
+    const market = catalog.markets[index % catalog.markets.length]!
+    const value = Math.round((4.25 + index * 1.31 + random()) * 100) / 100
+    const movementPercent = Math.round((-5.5 + (index % 7) * 2.7) * 10) / 10
+    const volatilityPercent = Math.round((5.8 + (index % 5) * 3.4) * 10) / 10
+    const forecastChange = Math.round((movementPercent * 0.7 + 4.8) * 10) / 10
+    const direction = forecastChange > 1 ? 'rising' as const : forecastChange < -1 ? 'falling' as const : 'stable' as const
+    const projectedValue = Math.max(0, Math.round((value * (1 + forecastChange / 100)) * 100) / 100)
+    const intervalWidth = Math.round((0.65 + index * 0.04) * 100) / 100
+    const severity = scenario === 'critical-risk' && index === 0 ? 'critical' as const : severities[index % severities.length]!
+    const riskSummary = scenario === 'partial' && index % 4 === 0 ? null : { regionId: market.location.regionId, severity, probability: Math.min(0.95, 0.36 + (3 - (index % 4)) * 0.13), valueAtRisk: { amount: 82_000 + index * 47_500, currency: 'GHS' as const } }
+    const forecastSummary = scenario === 'partial' && index % 5 === 0 ? null : { horizonDays: 30, projectedValue, unitLabel: `GHS/${commodity.defaultUnit}`, lowerBound: Math.max(0, Math.round((projectedValue - intervalWidth) * 100) / 100), upperBound: Math.round((projectedValue + intervalWidth) * 100) / 100, changePercent: forecastChange, direction, confidence, freshness, modelId: `model-${commodity.id.replace('commodity-', '')}-price-v1` }
+    const attentionRank = commodity.id === 'commodity-tomato' ? 100 : Math.round((riskSummary?.probability ?? 0) * 55 + Math.abs(forecastChange) * 2 + volatilityPercent)
+    const volatilityBand = volatilityPercent >= 16 ? 'high' as const : volatilityPercent >= 10 ? 'medium' as const : 'low' as const
+    return { attentionRank, commodity, market, referenceRegionId: market.location.regionId, currentPrice: { value, unit: { currency: 'GHS' as const, per: commodity.defaultUnit }, observedAt: freshness.observedAt, freshness }, movementPercent, direction, volatilityPercent, volatilityBand, forecastSummary, riskSummary }
+  })
+
+  const normalizedSearch = query.q.toLocaleLowerCase('en-GH')
+  if (normalizedSearch) items = items.filter(({ commodity }) => [commodity.name, ...commodity.aliases].some((value) => value.toLocaleLowerCase('en-GH').includes(normalizedSearch)))
+  if (query.category) items = items.filter(({ commodity }) => commodity.category === query.category)
+  if (query.region) items = items.filter(({ referenceRegionId }) => referenceRegionId === query.region)
+  if (query.direction) items = items.filter(({ direction }) => direction === query.direction)
+  if (query.risk) items = items.filter(({ riskSummary }) => riskSummary?.severity === query.risk)
+  if (query.confidence) items = items.filter(({ forecastSummary }) => forecastSummary?.confidence.band === query.confidence)
+
+  const riskRank = { low: 1, medium: 2, high: 3, critical: 4 } as const
+  const freshnessRank = { stale: 0, fresh: 1 } as const
+  items.sort((left, right) => {
+    let comparison = 0
+    switch (query.sort) {
+      case 'attention': comparison = left.attentionRank - right.attentionRank; break
+      case 'increase': comparison = left.movementPercent - right.movementPercent; break
+      case 'decrease': comparison = right.movementPercent - left.movementPercent; break
+      case 'volatility': comparison = left.volatilityPercent - right.volatilityPercent; break
+      case 'risk': comparison = (left.riskSummary ? riskRank[left.riskSummary.severity] : 0) - (right.riskSummary ? riskRank[right.riskSummary.severity] : 0); break
+      case 'freshness': comparison = freshnessRank[left.currentPrice.freshness.status] - freshnessRank[right.currentPrice.freshness.status]; break
+      case 'name': comparison = left.commodity.name.localeCompare(right.commodity.name); break
+    }
+    return (query.order === 'desc' ? -comparison : comparison) || left.commodity.name.localeCompare(right.commodity.name)
+  })
+
+  if (scenario === 'empty') items = []
+  const totalItems = items.length
+  const totalPages = totalItems === 0 ? 0 : Math.ceil(totalItems / query.pageSize)
+  const start = (query.page - 1) * query.pageSize
+  return commodityExplorerSnapshotSchema.parse({ generatedAt: NOW, state: scenario, query, pageInfo: { page: query.page, pageSize: query.pageSize, totalItems, totalPages }, items: items.slice(start, start + query.pageSize) })
 }
 
 export function createCommodityIntelligence(commodityId = 'commodity-tomato', scenario: Exclude<MockScenario, 'error'> = 'success'): CommodityIntelligenceSnapshot {

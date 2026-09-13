@@ -27,6 +27,7 @@ import { Route as AppWorkspaceIntegrationsRouteImport } from './routes/_app/work
 import { Route as AppWorkspaceOrganizationRouteImport } from './routes/_app/workspace.organization'
 import { Route as AppWorkspacePeopleRouteImport } from './routes/_app/workspace.people'
 import { Route as AppWorkspaceSettingsRouteImport } from './routes/_app/workspace.settings'
+import { Route as AppIntelligenceCommoditiesIndexRouteImport } from './routes/_app/intelligence.commodities.index'
 import { Route as AppIntelligenceCommoditiesCommodityIdRouteImport } from './routes/_app/intelligence.commodities.$commodityId'
 
 const AppRoute = AppRouteImport.update({
@@ -120,6 +121,12 @@ const AppWorkspaceSettingsRoute = AppWorkspaceSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AppWorkspaceRoute,
 } as any)
+const AppIntelligenceCommoditiesIndexRoute =
+  AppIntelligenceCommoditiesIndexRouteImport.update({
+    id: '/commodities/',
+    path: '/commodities/',
+    getParentRoute: () => AppIntelligenceRoute,
+  } as any)
 const AppIntelligenceCommoditiesCommodityIdRoute =
   AppIntelligenceCommoditiesCommodityIdRouteImport.update({
     id: '/commodities/$commodityId',
@@ -146,6 +153,7 @@ export interface FileRoutesByFullPath {
   '/intelligence/': typeof AppIntelligenceIndexRoute
   '/workspace/': typeof AppWorkspaceIndexRoute
   '/intelligence/commodities/$commodityId': typeof AppIntelligenceCommoditiesCommodityIdRoute
+  '/intelligence/commodities/': typeof AppIntelligenceCommoditiesIndexRoute
 }
 export interface FileRoutesByTo {
   '/sign-in': typeof SignInRoute
@@ -163,6 +171,7 @@ export interface FileRoutesByTo {
   '/intelligence': typeof AppIntelligenceIndexRoute
   '/workspace': typeof AppWorkspaceIndexRoute
   '/intelligence/commodities/$commodityId': typeof AppIntelligenceCommoditiesCommodityIdRoute
+  '/intelligence/commodities': typeof AppIntelligenceCommoditiesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -185,6 +194,7 @@ export interface FileRoutesById {
   '/_app/intelligence/': typeof AppIntelligenceIndexRoute
   '/_app/workspace/': typeof AppWorkspaceIndexRoute
   '/_app/intelligence/commodities/$commodityId': typeof AppIntelligenceCommoditiesCommodityIdRoute
+  '/_app/intelligence/commodities/': typeof AppIntelligenceCommoditiesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -207,6 +217,7 @@ export interface FileRouteTypes {
     | '/intelligence/'
     | '/workspace/'
     | '/intelligence/commodities/$commodityId'
+    | '/intelligence/commodities/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/sign-in'
@@ -224,6 +235,7 @@ export interface FileRouteTypes {
     | '/intelligence'
     | '/workspace'
     | '/intelligence/commodities/$commodityId'
+    | '/intelligence/commodities'
   id:
     | '__root__'
     | '/_app'
@@ -245,6 +257,7 @@ export interface FileRouteTypes {
     | '/_app/intelligence/'
     | '/_app/workspace/'
     | '/_app/intelligence/commodities/$commodityId'
+    | '/_app/intelligence/commodities/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -380,6 +393,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppWorkspaceSettingsRouteImport
       parentRoute: typeof AppWorkspaceRoute
     }
+    '/_app/intelligence/commodities/': {
+      id: '/_app/intelligence/commodities/'
+      path: '/commodities'
+      fullPath: '/intelligence/commodities/'
+      preLoaderRoute: typeof AppIntelligenceCommoditiesIndexRouteImport
+      parentRoute: typeof AppIntelligenceRoute
+    }
     '/_app/intelligence/commodities/$commodityId': {
       id: '/_app/intelligence/commodities/$commodityId'
       path: '/commodities/$commodityId'
@@ -407,12 +427,14 @@ const AppDecisionsRouteWithChildren = AppDecisionsRoute._addFileChildren(
 interface AppIntelligenceRouteChildren {
   AppIntelligenceIndexRoute: typeof AppIntelligenceIndexRoute
   AppIntelligenceCommoditiesCommodityIdRoute: typeof AppIntelligenceCommoditiesCommodityIdRoute
+  AppIntelligenceCommoditiesIndexRoute: typeof AppIntelligenceCommoditiesIndexRoute
 }
 
 const AppIntelligenceRouteChildren: AppIntelligenceRouteChildren = {
   AppIntelligenceIndexRoute: AppIntelligenceIndexRoute,
   AppIntelligenceCommoditiesCommodityIdRoute:
     AppIntelligenceCommoditiesCommodityIdRoute,
+  AppIntelligenceCommoditiesIndexRoute: AppIntelligenceCommoditiesIndexRoute,
 }
 
 const AppIntelligenceRouteWithChildren = AppIntelligenceRoute._addFileChildren(

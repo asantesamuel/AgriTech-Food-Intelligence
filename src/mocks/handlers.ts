@@ -1,6 +1,7 @@
 import { delay, http, HttpResponse } from 'msw'
 import { decisionSchema, decisionTransitionInputSchema, inviteMemberInputSchema, updateMemberInputSchema, updateOrganizationInputSchema } from '@/domain'
-import { createCatalog, createCommodityIntelligence, createDashboard, createDecisions, createMarketPulse, createPlatform } from './factories'
+import { commodityExplorerQuerySchema } from '@/domain'
+import { createCatalog, createCommodityExplorer, createCommodityIntelligence, createDashboard, createDecisions, createMarketPulse, createPlatform } from './factories'
 import { readMockLatency, readMockScenario } from './scenarios'
 
 async function prepare(url: URL) {
@@ -105,6 +106,14 @@ export const handlers = [
     const scenario = await prepare(url)
     if (scenario === 'error') return HttpResponse.json({ message: 'Market pulse unavailable' }, { status: 503 })
     return HttpResponse.json(createMarketPulse(scenario))
+  }),
+  http.get('*/api/intelligence/commodities', async ({ request }) => {
+    const url = new URL(request.url)
+    const scenario = await prepare(url)
+    if (scenario === 'error') return HttpResponse.json({ message: 'Commodity explorer unavailable' }, { status: 503 })
+    const parsed = commodityExplorerQuerySchema.safeParse(Object.fromEntries(url.searchParams))
+    if (!parsed.success) return HttpResponse.json({ message: 'Invalid commodity explorer query' }, { status: 400 })
+    return HttpResponse.json(createCommodityExplorer(parsed.data, scenario))
   }),
   http.get('*/api/intelligence/commodities/:commodityId', async ({ request, params }) => {
     const url = new URL(request.url)

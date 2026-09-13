@@ -1,6 +1,7 @@
 export const protectedPaths = [
   '/',
   '/intelligence',
+  '/intelligence/commodities',
   '/intelligence/commodities/commodity-tomato',
   '/decisions',
   '/decisions/decision-tomato-purchase',

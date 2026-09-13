@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { confidenceSchema, decisionImpactSchema, forecastPointSchema, locationSchema, moneySchema, purchaseTimingSchema, userSchema } from '@/domain'
+import { commodityExplorerQuerySchema, confidenceSchema, decisionImpactSchema, forecastPointSchema, locationSchema, moneySchema, purchaseTimingSchema, userSchema } from '@/domain'
 
 describe('domain validation contracts', () => {
   it('accepts standardized money, confidence, and location values', () => {
@@ -20,5 +20,11 @@ describe('domain validation contracts', () => {
   it('validates purchase windows and measured financial impact', () => {
     expect(() => purchaseTimingSchema.parse({ windowStart: '2026-09-14', windowEnd: '2026-09-08', quantity: 80, unit: 'tonne', sourceMarketId: 'market-kejetia', destinationMarketId: 'market-agbogbloshie', targetUnitPrice: { amount: 9.4, currency: 'GHS' } })).toThrow('Purchase window must end on or after it starts')
     expect(() => decisionImpactSchema.parse({ expectedFinancialValueProtected: { amount: 684000, currency: 'GHS' }, actualFinancialValueProtected: { amount: 650000, currency: 'GHS' } })).toThrow('Measured outcomes require a measurement time')
+  })
+
+  it('normalizes safe commodity explorer URL parameters', () => {
+    expect(commodityExplorerQuerySchema.parse({ page: '2', pageSize: '25' })).toMatchObject({ q: '', sort: 'attention', order: 'desc', page: 2, pageSize: 25 })
+    expect(() => commodityExplorerQuerySchema.parse({ pageSize: '20' })).toThrow()
+    expect(() => commodityExplorerQuerySchema.parse({ sort: 'price-desc' })).toThrow()
   })
 })
