@@ -15,12 +15,13 @@ export function namePriceMovers(snapshot: DashboardSnapshot, catalog: CatalogSna
 }
 
 export function defaultDashboardFilters(storage: Pick<Storage, 'getItem'> | null, organizationId: string) {
-  if (!storage) return { commodityId: '', regionId: '', horizon: '30d' as const }
+  const procurementDefault = { commodityId: 'commodity-tomato', regionId: 'region-greater-accra', horizon: '30d' as const }
+  if (!storage) return procurementDefault
   try {
     const raw = storage.getItem(`food-intelligence.onboarding.v1.${organizationId}`)
     const parsed = raw ? JSON.parse(raw) as { commodityIds?: string[]; regionIds?: string[] } : null
-    return { commodityId: parsed?.commodityIds?.[0] ?? '', regionId: parsed?.regionIds?.[0] ?? '', horizon: '30d' as const }
+    return { commodityId: parsed?.commodityIds?.[0] ?? procurementDefault.commodityId, regionId: parsed?.regionIds?.[0] ?? procurementDefault.regionId, horizon: '30d' as const }
   } catch {
-    return { commodityId: '', regionId: '', horizon: '30d' as const }
+    return procurementDefault
   }
 }

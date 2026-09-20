@@ -31,10 +31,17 @@ The expected data flow is:
 In development, MSW will intercept the adapter's HTTP request. Production APIs can
 therefore replace mocks without changing feature components.
 
-## Feature modules
+## Product loop and feature modules
 
-The initial boundaries are markets, forecasts, waste, recommendations,
-procurement, optimisation, scenarios, reports, and platform. A module should not
+The primary experience now follows `Market data -> Forecast -> Imbalance -> Risk ->
+Recommendation -> Decision -> Outcome -> Measured impact`. Intelligence owns the
+market pulse and commodity evidence; Decisions owns workflow state and measured
+financial value; Planning owns simulations; Workspace owns alerts, data sources,
+integrations, organization, people, and settings.
+
+Decision mutations are tenant-scoped and run through a typed service contract.
+Every decision links its recommendation, forecast, risks, alerts, owner, purchase
+window, history, and impact record. A module should not
 reach into another module's internal files; promote genuinely shared contracts to
 `domain`, `services`, or `shared` instead.
 

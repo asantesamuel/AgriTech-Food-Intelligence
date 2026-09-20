@@ -1,92 +1,121 @@
 import { useQuery } from '@tanstack/react-query'
-import { ArrowDownRight, ArrowUpRight, Clock3, DatabaseZap, Lightbulb, RefreshCw, ShieldAlert, TrendingUp, Wheat } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
+import { ArrowRight, Clock3, DatabaseZap, MapPin, RefreshCw, ShieldAlert } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
+
 import type { CatalogSnapshot, DashboardSnapshot } from '@/domain'
+import { ForecastChart } from '@/features/intelligence'
+import { useAuth } from '@/features/platform/auth/auth-context'
+import { useDemo } from '@/features/platform/demo/demo-context'
 import type { DashboardFilters } from '@/services'
 import { catalogService, dashboardService } from '@/services'
-import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, SemanticBadge, Skeleton, StatePanel, Table, TableBody, TableCell, TableContainer, TableHead, TableHeader, TableRow } from '@/shared/ui'
-import { useAuth } from '@/features/platform/auth/auth-context'
-import { mockScenarios, type MockScenario } from '@/mocks/scenarios'
+import { Badge, Button, SemanticBadge, Skeleton, StatePanel } from '@/shared/ui'
 import { defaultDashboardFilters, namePriceMovers } from './dashboard-model'
 
-const selectClass = 'h-10 min-w-36 rounded-md border bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+const selectClass = 'h-10 min-w-0 rounded-md border border-input bg-card px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
 const formatMoney = (amount: number) => new Intl.NumberFormat('en-GH', { style: 'currency', currency: 'GHS', maximumFractionDigits: 0 }).format(amount)
 
 export function ExecutiveDashboard() {
-  const { organization } = useAuth()
+  const { organization, user } = useAuth()
+  const { scenario } = useDemo()
   const initial = useMemo(() => defaultDashboardFilters(typeof window === 'undefined' ? null : window.localStorage, organization?.id ?? ''), [organization?.id])
   const [filters, setFilters] = useState<Required<DashboardFilters>>(initial)
-  const [scenario, setScenario] = useState<MockScenario>('success')
   useEffect(() => setFilters(initial), [initial])
   const catalogQuery = useQuery({ queryKey: ['catalog'], queryFn: () => catalogService.getCatalog() })
-  const dashboardQuery = useQuery({
-    queryKey: ['dashboard', filters, scenario],
-    queryFn: () => dashboardService.getSnapshot({ commodityId: filters.commodityId || undefined, regionId: filters.regionId || undefined, horizon: filters.horizon }, { scenario }),
-  })
-  const snapshot = dashboardQuery.data
-  const catalog = catalogQuery.data
-  const movers = useMemo(() => snapshot && catalog ? namePriceMovers(snapshot, catalog) : [], [snapshot, catalog])
+  const dashboardQuery = useQuery({ queryKey: ['dashboard', filters, scenario], queryFn: () => dashboardService.getSnapshot(filters, { scenario }) })
 
   function updateFilter<Key extends keyof Required<DashboardFilters>>(key: Key, value: Required<DashboardFilters>[Key]) {
     setFilters((current) => ({ ...current, [key]: value }))
   }
 
-  return (
-    <div className="grid min-w-0 gap-6 overflow-x-hidden px-4 py-6 sm:p-6">
-      <header className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-        <div className="max-w-3xl">
-          <Badge tone="info">Executive overview</Badge>
-          <h1 className="mt-3 text-balance text-3xl font-semibold tracking-tight sm:text-4xl">Signals that need a decision.</h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">Market movement, supply pressure and preventable waste—prioritized for {organization?.name ?? 'your workspace'}.</p>
-        </div>
-        {snapshot ? <div className="flex items-center gap-2 text-xs text-muted-foreground"><Clock3 className="size-4" /><span>Snapshot {new Date(snapshot.generatedAt).toLocaleString('en-GH', { dateStyle: 'medium', timeStyle: 'short' })}</span><SemanticBadge signal="freshness" level={snapshot.freshness.status === 'stale' ? 'stale' : 'fresh'} /></div> : null}
-      </header>
+  return <div className="mx-auto grid w-full max-w-[100rem] gap-7 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+    <header className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+      <div>
+        <p className="text-sm font-medium text-primary">Procurement brief · {organization?.name}</p>
+        <h1 className="mt-2 max-w-3xl text-balance text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">Good morning, {user?.name.split(' ')[0] ?? 'team'}. One purchase decision needs attention.</h1>
+        <p className="mt-3 max-w-2xl text-base leading-7 text-muted-foreground">Review where tomato supply, price pressure and timing could affect your next purchasing window.</p>
+      </div>
+      <div className="flex items-center gap-2 text-sm text-muted-foreground"><Clock3 className="size-4" /><span>Illustrative dataset · 7 Sep 2026</span></div>
+    </header>
 
-      <Card>
-        <CardContent className="flex flex-col gap-4 pt-5 sm:pt-6 lg:flex-row lg:items-end">
-          <Filter label="Commodity" value={filters.commodityId} onChange={(value) => updateFilter('commodityId', value)} options={catalog?.commodities.map((item) => ({ value: item.id, label: item.name })) ?? []} allLabel="All commodities" />
-          <Filter label="Region" value={filters.regionId} onChange={(value) => updateFilter('regionId', value)} options={catalog?.regions.map((item) => ({ value: item.id, label: item.name })) ?? []} allLabel="All regions" />
-          <Filter label="Time horizon" value={filters.horizon} onChange={(value) => updateFilter('horizon', value as Required<DashboardFilters>['horizon'])} options={[{ value: '7d', label: 'Next 7 days' }, { value: '30d', label: 'Next 30 days' }, { value: '90d', label: 'Next 90 days' }]} />
-          <Filter label="Prototype state" value={scenario} onChange={(value) => setScenario(value as MockScenario)} options={mockScenarios.map((item) => ({ value: item, label: item.replace('-', ' ') }))} />
-          <Button className="lg:ml-auto" variant="outline" onClick={() => void dashboardQuery.refetch()}><RefreshCw />Refresh</Button>
-        </CardContent>
-      </Card>
+    <section className="panel grid gap-4 rounded-lg p-4 lg:grid-cols-[repeat(3,minmax(0,1fr))_auto] lg:items-end" aria-label="Intelligence scope">
+      <Filter label="Commodity" value={filters.commodityId} onChange={(value) => updateFilter('commodityId', value)} options={catalogQuery.data?.commodities.map((item) => ({ value: item.id, label: item.name })) ?? []} />
+      <Filter label="Region" value={filters.regionId} onChange={(value) => updateFilter('regionId', value)} options={catalogQuery.data?.regions.map((item) => ({ value: item.id, label: item.name })) ?? []} />
+      <Filter label="Decision horizon" value={filters.horizon} onChange={(value) => updateFilter('horizon', value as Required<DashboardFilters>['horizon'])} options={[{ value: '7d', label: 'Next 7 days' }, { value: '30d', label: 'Next 30 days' }, { value: '90d', label: 'Next 90 days' }]} />
+      <Button variant="outline" onClick={() => void dashboardQuery.refetch()}><RefreshCw />Refresh</Button>
+    </section>
 
-      {dashboardQuery.isPending || catalogQuery.isPending ? <DashboardSkeleton /> : null}
-      {dashboardQuery.isError || catalogQuery.isError ? <StatePanel kind="error" title="Intelligence is temporarily unavailable" description="The mock service could not assemble this dashboard. Try the request again." action={{ label: 'Retry', onClick: () => { void catalogQuery.refetch(); void dashboardQuery.refetch() } }} /> : null}
-      {snapshot && snapshot.kpis.length === 0 ? <StatePanel kind="empty" title="No signals match these filters" description="Broaden the commodity or region selection, or return the prototype state to success." /> : null}
-      {snapshot && snapshot.kpis.length > 0 && catalog ? <DashboardContent snapshot={snapshot} movers={movers} horizon={filters.horizon} catalog={catalog} /> : null}
-    </div>
-  )
+    {dashboardQuery.isPending || catalogQuery.isPending ? <DashboardSkeleton /> : null}
+    {dashboardQuery.isError || catalogQuery.isError ? <StatePanel kind="error" title="Intelligence is temporarily unavailable" description="Open Demo controls to return the application condition to Ready, or retry the request." action={{ label: 'Retry', onClick: () => { void catalogQuery.refetch(); void dashboardQuery.refetch() } }} /> : null}
+    {dashboardQuery.data && dashboardQuery.data.kpis.length === 0 ? <StatePanel kind="empty" title="No decisions need attention" description="No tomato signals match the active procurement scope." /> : null}
+    {dashboardQuery.data && dashboardQuery.data.kpis.length > 0 && catalogQuery.data ? <DashboardContent snapshot={dashboardQuery.data} catalog={catalogQuery.data} horizon={filters.horizon} /> : null}
+  </div>
 }
 
-function Filter({ label, value, onChange, options, allLabel }: Readonly<{ label: string; value: string; onChange: (value: string) => void; options: Array<{ value: string; label: string }>; allLabel?: string }>) {
-  return <label className="grid gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}<select className={selectClass} value={value} onChange={(event) => onChange(event.target.value)}>{allLabel ? <option value="">{allLabel}</option> : null}{options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
-}
+function DashboardContent({ snapshot, catalog, horizon }: Readonly<{ snapshot: DashboardSnapshot; catalog: CatalogSnapshot; horizon: string }>) {
+  const movers = namePriceMovers(snapshot, catalog)
+  const primaryRisk = snapshot.risks.find((risk) => risk.commodityId === 'commodity-tomato') ?? snapshot.risks[0]
+  const primaryRecommendation = snapshot.recommendations.find((recommendation) => recommendation.title.toLowerCase().includes('tomato')) ?? snapshot.recommendations[0]
+  const forecast = snapshot.forecasts.find((item) => item.commodityId === 'commodity-tomato') ?? snapshot.forecasts[0]
+  const valueProtected = primaryRisk?.valueAtRisk.amount ?? 0
 
-function DashboardSkeleton() {
-  return <section aria-label="Loading executive intelligence" aria-busy="true" className="grid gap-4"><div className="grid gap-4 sm:grid-cols-3">{[1, 2, 3].map((item) => <Skeleton key={item} className="h-32" />)}</div><div className="grid gap-4 xl:grid-cols-5"><Skeleton className="h-80 xl:col-span-3" /><Skeleton className="h-80 xl:col-span-2" /></div></section>
-}
-
-function DashboardContent({ snapshot, movers, horizon, catalog }: Readonly<{ snapshot: DashboardSnapshot; movers: ReturnType<typeof namePriceMovers>; horizon: string; catalog: CatalogSnapshot }>) {
-  const commodityName = (id: string) => catalog.commodities.find((item) => item.id === id)?.name ?? 'Commodity'
-  const regionName = (id: string) => catalog.regions.find((item) => item.id === id)?.name ?? 'Region'
   return <>
-    {snapshot.state === 'stale' ? <SignalBanner icon={DatabaseZap} title="Stale market observations" message="The latest observation is outside the freshness window. Use the figures directionally until the next refresh." /> : null}
-    {snapshot.state === 'partial' ? <SignalBanner icon={ShieldAlert} title="Partial intelligence" message={`Unavailable section: ${snapshot.unavailableSections.join(', ')}. Available signals remain visible.`} /> : null}
-    <section className="grid gap-4 sm:grid-cols-3" aria-label="Core market and risk indicators">
-      {snapshot.kpis.map((kpi) => <Card key={kpi.id} className="relative overflow-hidden"><div className={`absolute inset-x-0 top-0 h-0.5 ${kpi.tone === 'danger' ? 'bg-danger' : kpi.tone === 'warning' ? 'bg-warning' : 'bg-info'}`} /><CardHeader className="pb-2"><CardDescription>{kpi.label}</CardDescription><CardTitle className="font-mono text-2xl sm:text-3xl">{kpi.displayValue}</CardTitle></CardHeader><CardContent className="flex items-center gap-2 text-xs text-muted-foreground">{(kpi.trendPercent ?? 0) >= 0 ? <ArrowUpRight className="size-4 text-danger" /> : <ArrowDownRight className="size-4 text-success" />}<span>{Math.abs(kpi.trendPercent ?? 0)}% vs prior period</span></CardContent></Card>)}
+    {snapshot.state === 'stale' ? <SignalBanner icon={DatabaseZap} title="The latest market observations are stale" message="Treat the purchase window as directional until market reporting catches up." /> : null}
+    {snapshot.state === 'partial' ? <SignalBanner icon={ShieldAlert} title="The brief has partial coverage" message={`Unavailable evidence: ${snapshot.unavailableSections.join(', ')}. Available intelligence remains visible.`} /> : null}
+    {snapshot.state === 'low-confidence' ? <SignalBanner icon={ShieldAlert} title="Model confidence is low" message="Review the wider forecast range and confirm market conditions before committing volume." /> : null}
+
+    <section className="overflow-hidden rounded-xl bg-[linear-gradient(120deg,#123c31,#1a5746)] text-white shadow-[0_18px_45px_rgba(18,60,49,0.16)]" aria-labelledby="priority-decision-title">
+      <div className="grid lg:grid-cols-[minmax(0,1.45fr)_minmax(18rem,0.55fr)]">
+        <div className="p-6 sm:p-8">
+          <div className="flex flex-wrap items-center gap-2"><Badge className="border-white/20 bg-white/10 text-white">Priority decision</Badge><Badge className="border-amber-200/30 bg-amber-200/10 text-amber-100">Review today</Badge></div>
+          <h2 id="priority-decision-title" className="mt-5 max-w-3xl text-2xl font-semibold tracking-tight sm:text-3xl">Move the next tomato purchase window forward.</h2>
+          <p className="mt-3 max-w-2xl text-base leading-7 text-white/75">{primaryRecommendation?.rationale ?? 'Rising demand pressure and a tightening price outlook favor earlier purchasing.'}</p>
+          <p className="mt-5 text-lg font-semibold">{primaryRecommendation?.action ?? 'Secure the required tomato volume before the forecast price rise.'}</p>
+          <div className="mt-7 flex flex-wrap gap-3"><Button asChild className="bg-white text-[#153e33] hover:bg-white/90"><Link to="/decisions">Review recommendation <ArrowRight /></Link></Button><Button asChild variant="outline" className="border-white/25 bg-transparent text-white hover:bg-white/10"><Link to="/intelligence">View supporting intelligence</Link></Button></div>
+        </div>
+        <aside className="grid content-center gap-5 border-t border-white/15 bg-black/10 p-6 sm:p-8 lg:border-l lg:border-t-0" aria-label="Expected decision impact">
+          <div><p className="text-sm text-white/65">Financial value protected</p><p className="mt-1 font-mono text-3xl font-semibold">{formatMoney(valueProtected)}</p></div>
+          <div className="grid grid-cols-2 gap-5"><div><p className="text-sm text-white/65">Model confidence</p><p className="mt-1 text-lg font-semibold capitalize">{forecast?.confidence.band ?? '—'}</p></div><div><p className="text-sm text-white/65">Decision by</p><p className="mt-1 text-lg font-semibold">Today, 16:00</p></div></div>
+        </aside>
+      </div>
     </section>
-    <section className="grid min-w-0 gap-4 xl:grid-cols-5">
-      <Card className="min-w-0 xl:col-span-3"><CardHeader className="flex-row items-start justify-between"><div><CardTitle className="flex items-center gap-2"><TrendingUp className="size-4 text-primary" />Top price movers</CardTitle><CardDescription>Largest absolute changes across observed markets.</CardDescription></div><Badge>{horizon}</Badge></CardHeader><CardContent><TableContainer><Table><TableHeader><TableRow><TableHead>Commodity</TableHead><TableHead>Market</TableHead><TableHead>Price</TableHead><TableHead>Change</TableHead></TableRow></TableHeader><TableBody>{movers.map((item) => <TableRow key={item.id}><TableCell className="font-semibold">{item.commodityName}</TableCell><TableCell className="text-muted-foreground">{item.marketName}</TableCell><TableCell className="font-mono">GHS {item.price.toFixed(2)}/{item.priceUnit.per}</TableCell><TableCell><span className={(item.changePercent ?? 0) >= 0 ? 'text-danger' : 'text-success'}>{(item.changePercent ?? 0) > 0 ? '+' : ''}{item.changePercent ?? 0}%</span></TableCell></TableRow>)}</TableBody></Table></TableContainer></CardContent></Card>
-      <Card className="xl:col-span-2"><CardHeader><CardTitle className="flex items-center gap-2"><ShieldAlert className="size-4 text-warning" />Supply pressure</CardTitle><CardDescription>Shortage and glut alerts that may affect availability.</CardDescription></CardHeader><CardContent className="grid gap-3">{snapshot.alerts.filter((item) => item.category === 'shortage' || item.category === 'glut').map((alert) => <article key={alert.id} className="rounded-lg border bg-background/40 p-4"><div className="flex items-start justify-between gap-3"><strong className="text-sm">{alert.title}</strong><SemanticBadge signal="risk" level={alert.severity} /></div><p className="mt-2 text-sm leading-5 text-muted-foreground">{alert.message}</p><Badge className="mt-3">{alert.category}</Badge></article>)}</CardContent></Card>
+
+    <section className="panel grid divide-y rounded-lg sm:grid-cols-2 sm:divide-x sm:divide-y-0 xl:grid-cols-4" aria-label="Operating pulse">
+      <PulseMetric label="Value currently exposed" value={formatMoney(primaryRisk?.valueAtRisk.amount ?? 0)} detail="Tomato · Greater Accra" />
+      <PulseMetric label="Purchase decisions due" value={String(snapshot.recommendations.length)} detail="1 requires review today" />
+      <PulseMetric label="Markets under pressure" value={String(snapshot.alerts.length)} detail="Glut and shortage signals" />
+      <PulseMetric label="Model confidence" value={`${Math.round((forecast?.confidence.score ?? 0) * 100)}%`} detail={`${horizon.toUpperCase()} price outlook`} />
     </section>
-    <section className="grid gap-4 lg:grid-cols-2">
-      <Card><CardHeader><CardTitle className="flex items-center gap-2"><Wheat className="size-4 text-danger" />Commodities at risk</CardTitle><CardDescription>Waste exposure ranked by severity and value.</CardDescription></CardHeader><CardContent className="grid gap-3">{snapshot.risks.length ? snapshot.risks.map((risk) => <article key={risk.id} className="rounded-lg border p-4"><div className="flex flex-wrap items-center justify-between gap-2"><strong>{commodityName(risk.commodityId)} · {regionName(risk.regionId)}</strong><SemanticBadge signal="risk" level={risk.severity} /></div><div className="mt-4 grid grid-cols-3 gap-3 text-sm"><Metric label="Probability" value={`${Math.round(risk.probability * 100)}%`} /><Metric label="Volume" value={`${risk.volumeAtRisk} ${risk.unit}`} /><Metric label="Value" value={formatMoney(risk.valueAtRisk.amount)} /></div><p className="mt-3 text-xs text-muted-foreground">Drivers: {risk.drivers.join(' · ')}</p></article>) : <p className="text-sm text-muted-foreground">No waste risks match this coverage.</p>}</CardContent></Card>
-      <Card><CardHeader><CardTitle className="flex items-center gap-2"><Lightbulb className="size-4 text-primary" />Recommended action</CardTitle><CardDescription>Interventions with modeled impact and confidence.</CardDescription></CardHeader><CardContent className="grid gap-3">{snapshot.recommendations.map((recommendation) => <article key={recommendation.id} className="rounded-lg border p-4"><div className="flex flex-wrap items-start justify-between gap-2"><strong>{recommendation.title}</strong><SemanticBadge signal="confidence" level={recommendation.confidence.band} /></div><p className="mt-2 text-sm font-medium text-primary">{recommendation.action}</p><p className="mt-2 text-sm leading-5 text-muted-foreground">{recommendation.rationale}</p><div className="mt-3 flex items-center gap-2"><Badge tone="success">{recommendation.expectedImpactPercent}% modeled impact</Badge><Badge>{recommendation.category}</Badge></div></article>)}</CardContent></Card>
+
+    <section className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1.65fr)_minmax(18rem,0.75fr)]">
+      <div className="panel min-w-0 rounded-lg p-5 sm:p-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><p className="data-label">Tomato market outlook</p><h2 className="mt-2 text-xl font-semibold">Observed price and 30-day forecast</h2><p className="mt-1 text-sm text-muted-foreground">Agbogbloshie Wholesale · GHS per crate</p></div><div className="flex items-center gap-2"><span className="flex items-center gap-1.5 text-xs text-muted-foreground"><span className="size-2 rounded-full bg-[var(--observed)]" />Observed</span><span className="flex items-center gap-1.5 text-xs text-muted-foreground"><span className="size-2 rounded-full bg-[var(--forecast)]" />Forecast</span></div></div>
+        {forecast ? <ForecastChart forecast={forecast} observedValue={movers.find((item) => item.commodityId === 'commodity-tomato')?.price ?? 8.54} /> : <p className="mt-8 text-sm text-muted-foreground">Forecast evidence is unavailable for this scope.</p>}
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t pt-4 text-sm"><p className="text-muted-foreground">Peak arrivals and limited cold storage widen the downside risk of waiting.</p><Button asChild variant="ghost" size="sm"><Link to="/intelligence">Explore forecast <ArrowRight /></Link></Button></div>
+      </div>
+
+      <div className="panel rounded-lg p-5 sm:p-6">
+        <p className="data-label">Flow pressure</p><h2 className="mt-2 text-xl font-semibold">Tomato corridor</h2><p className="mt-1 text-sm text-muted-foreground">Supply movement and destination demand.</p>
+        <div className="mt-7 grid gap-5"><CorridorStop place="Ashanti source markets" detail="80 t available" status="Supply available" /><div className="ml-4 h-8 border-l border-dashed border-primary/40" /><CorridorStop place="Greater Accra demand" detail="Price pressure rising" status="Purchase earlier" emphasis /></div>
+        <div className="mt-7 rounded-lg bg-muted p-4"><div className="flex items-center gap-2 text-sm font-semibold"><MapPin className="size-4 text-primary" />Timing window</div><p className="mt-2 text-sm leading-6 text-muted-foreground">Secure volume within seven days before the modeled price increase accelerates.</p></div>
+      </div>
+    </section>
+
+    <section className="panel overflow-hidden rounded-lg" aria-labelledby="action-queue-title">
+      <header className="flex flex-col gap-2 border-b px-5 py-5 sm:flex-row sm:items-end sm:justify-between sm:px-6"><div><p className="data-label">Next actions</p><h2 id="action-queue-title" className="mt-2 text-xl font-semibold">Procurement action queue</h2></div><Button asChild variant="ghost" size="sm"><Link to="/decisions">View all decisions <ArrowRight /></Link></Button></header>
+      <div className="divide-y">{snapshot.recommendations.map((recommendation, index) => <Link key={recommendation.id} to="/decisions" className="grid gap-3 px-5 py-4 transition-colors hover:bg-muted/60 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center sm:px-6"><div><div className="flex flex-wrap items-center gap-2"><strong>{recommendation.title}</strong><SemanticBadge signal="risk" level={recommendation.priority} /></div><p className="mt-1 text-sm text-muted-foreground">{recommendation.action}</p></div><div className="sm:text-right"><p className="text-xs text-muted-foreground">Expected value protected</p><p className="mt-1 font-mono font-semibold">{index === 0 ? formatMoney(valueProtected) : 'GHS 202,000'}</p></div><ArrowRight className="hidden size-4 text-muted-foreground sm:block" /></Link>)}</div>
     </section>
   </>
 }
 
-function SignalBanner({ icon: Icon, title, message }: Readonly<{ icon: typeof ShieldAlert; title: string; message: string }>) { return <section className="flex gap-3 rounded-xl border border-warning/30 bg-warning/10 p-4" role="status"><Icon className="mt-0.5 size-5 shrink-0 text-warning" /><div><strong className="text-sm">{title}</strong><p className="mt-1 text-sm text-muted-foreground">{message}</p></div></section> }
-function Metric({ label, value }: Readonly<{ label: string; value: string }>) { return <div><p className="text-xs text-muted-foreground">{label}</p><p className="mt-1 font-mono font-semibold">{value}</p></div> }
+function Filter({ label, value, onChange, options }: Readonly<{ label: string; value: string; onChange: (value: string) => void; options: Array<{ value: string; label: string }> }>) {
+  return <label className="grid min-w-0 gap-1.5 text-sm font-medium">{label}<select className={selectClass} value={value} onChange={(event) => onChange(event.target.value)}>{options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
+}
+
+function PulseMetric({ label, value, detail }: Readonly<{ label: string; value: string; detail: string }>) { return <div className="p-5 sm:p-6"><p className="text-sm text-muted-foreground">{label}</p><p className="mt-2 font-mono text-2xl font-semibold tracking-tight">{value}</p><p className="mt-2 text-xs text-muted-foreground">{detail}</p></div> }
+
+function CorridorStop({ place, detail, status, emphasis }: Readonly<{ place: string; detail: string; status: string; emphasis?: boolean }>) { return <div className="flex items-start gap-3"><span className={`mt-1 size-3 rounded-full border-2 ${emphasis ? 'border-warning bg-warning/20' : 'border-primary bg-primary/15'}`} /><div><strong className="block text-sm">{place}</strong><span className="mt-1 block text-sm text-muted-foreground">{detail}</span><Badge tone={emphasis ? 'warning' : 'success'} className="mt-2">{status}</Badge></div></div> }
+
+function SignalBanner({ icon: Icon, title, message }: Readonly<{ icon: typeof ShieldAlert; title: string; message: string }>) { return <section className="flex gap-3 rounded-lg border border-warning/30 bg-warning/10 p-4" role="status"><Icon className="mt-0.5 size-5 shrink-0 text-warning" /><div><strong className="text-sm">{title}</strong><p className="mt-1 text-sm text-muted-foreground">{message}</p></div></section> }
+
+function DashboardSkeleton() { return <section aria-label="Loading procurement brief" aria-busy="true" className="grid gap-5"><Skeleton className="h-72" /><Skeleton className="h-28" /><div className="grid gap-5 xl:grid-cols-3"><Skeleton className="h-96 xl:col-span-2" /><Skeleton className="h-96" /></div></section> }
